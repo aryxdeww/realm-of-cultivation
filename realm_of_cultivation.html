@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Realm of Cultivation: Fortune & Glory</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary: #935cd8;
+            --primary-dark: #6b3ba7;
+            --primary-light: #b388ef;
+            --bg-dark: #0f0f13;
+            --bg-panel: #181820;
+            --bg-card: #22222e;
+            --text-main: #f1f5f9;
+        }
+
+        body {
+            background-color: #050507;
+            color: var(--text-main);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        /* 9:16 Responsive Mobile Viewport Container */
+        #game-container {
+            width: 100%;
+            max-width: 450px;
+            height: 100dvh;
+            background-color: var(--bg-dark);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 35px rgba(147, 92, 216, 0.25);
+            border-left: 1px solid rgba(147, 92, 216, 0.2);
+            border-right: 1px solid rgba(147, 92, 216, 0.2);
+            overflow: hidden;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--primary-dark); border-radius: 10px; }
+
+        /* UI Panel & Glassmorphism */
+        .glass-panel {
+            background: rgba(24, 24, 32, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(147, 92, 216, 0.25);
+        }
+
+        .glass-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+        }
+
+        .btn-purple {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 4px 12px rgba(147, 92, 216, 0.3);
+            transition: all 0.15s ease;
+        }
+        .btn-purple:active { transform: scale(0.96); filter: brightness(0.9); }
+        .btn-purple:disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); transform: none; }
+
+        /* Animations */
+        @keyframes pop {
+            0% { transform: scale(0.92); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop { animation: pop 0.2s ease-out forwards; }
+
+        @keyframes float-up {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-35px); opacity: 0; }
+        }
+        .floating-text {
+            position: absolute;
+            animation: float-up 0.9s ease-out forwards;
+            font-weight: 800;
+            pointer-events: none;
+            z-index: 60;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        @keyframes hit-shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px) rotate(-2deg); }
+            40% { transform: translateX(8px) rotate(2deg); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
+        .animate-hit { animation: hit-shake 0.35s ease-in-out; }
+
+        /* Farm Plot Grid & Animation */
+        .farm-plot {
+            aspect-ratio: 1;
+            background: #2a1e17;
+            border: 2px solid #3d2b20;
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            user-select: none;
+            transition: transform 0.1s, border-color 0.2s;
+        }
+        .farm-plot:active { transform: scale(0.95); }
+        .farm-plot.locked {
+            background: #181820;
+            border: 2px dashed #333344;
+            color: #555566;
+            font-size: 1.2rem;
+        }
+        .farm-plot.growing::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; height: 100%;
+            background: rgba(147, 92, 216, 0.25);
+            width: var(--progress, 0%);
+            transition: width 0.2s linear;
+        }
+        .farm-plot.ready {
+            background: #23381a;
+            border-color: #4ade80;
+            box-shadow: 0 0 10px rgba(74, 222, 128, 0.3);
+        }
+
+        .tab-content { display: none; height: 100%; overflow-y: auto; padding: 1rem; padding-bottom: 5.5rem; }
+        .tab-content.active { display: block; animation: pop 0.2s ease-out; }
+
+        /* Toast Container */
+        #toast-container { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; flex-direction: column; gap: 6px; pointer-events: none; width: 85%; max-width: 360px; }
+        .toast { background: rgba(147, 92, 216, 0.95); color: white; padding: 10px 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; text-center: center; box-shadow: 0 8px 16px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 80; display: flex; align-items: center; justify-content: center; padding: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    
+    <!-- Top Fixed Header -->
+    <header class="glass-panel h-16 w-full flex items-center justify-between px-3 z-40 relative flex-shrink-0">
+        <!-- Player Info Trigger -->
+        <div class="flex items-center gap-2 cursor-pointer" onclick="Nav.switchTab('profile')">
+            <div id="header-avatar" class="bg-purple-900/60 rounded-full h-10 w-10 flex items-center justify-center border-2 border-purple-400 text-xl shadow-inner">
+                🧙‍♂️
+            </div>
+            <div class="flex flex-col">
+                <div class="flex items-center gap-1">
+                    <span id="header-name" class="font-bold text-xs text-purple-200 truncate max-w-[80px]">Hero</span>
+                    <span class="text-[10px] bg-purple-900/80 px-1.5 py-0.5 rounded text-purple-300 font-bold">Lvl <span id="header-level">1</span></span>
+                </div>
+                <!-- XP Bar -->
+                <div class="w-20 h-1.5 bg-gray-800 rounded-full overflow-hidden mt-1 border border-gray-700">
+                    <div id="header-xp-bar" class="h-full bg-purple-400 transition-all duration-300" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Currencies -->
+        <div class="flex items-center gap-2">
+            <!-- Coins -->
+            <div class="flex items-center gap-1 text-yellow-400 text-xs font-bold bg-gray-900/90 px-2.5 py-1 rounded-full border border-yellow-500/30">
+                <span>🪙</span><span id="header-coins">0</span>
+            </div>
+            <!-- Diamonds -->
+            <div class="flex items-center gap-1 text-cyan-300 text-xs font-bold bg-gray-900/90 px-2.5 py-1 rounded-full border border-cyan-500/30">
+                <span>💎</span><span id="header-diamonds">0</span>
+            </div>
+            <!-- Settings -->
+            <button onclick="Nav.switchTab('settings')" class="text-gray-400 hover:text-purple-400 text-lg p-1 transition-colors">⚙️</button>
+        </div>
+    </header>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Main Content Tab Area -->
+    <main class="flex-1 relative overflow-hidden">
+        
+        <!-- ================= TAB: PROFIL ================= -->
+        <div id="tab-profile" class="tab-content">
+            <h2 class="text-xl font-bold text-purple-400 mb-3 flex items-center gap-2">👤 Profil Player</h2>
+            
+            <!-- Character Card -->
+            <div class="glass-card p-4 mb-4 flex items-center justify-between border-purple-500/30">
+                <div class="flex items-center gap-3">
+                    <div id="profile-avatar-display" class="text-4xl bg-purple-950 p-3 rounded-2xl border border-purple-500/40">🧙‍♂️</div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 id="profile-name-display" class="font-bold text-lg text-white">Hero</h3>
+                            <button onclick="Profile.openEditModal()" class="text-xs text-purple-400 underline">Edit</button>
+                        </div>
+                        <p class="text-xs text-gray-400">Level <span id="profile-level">1</span> Wanderer</p>
+                    </div>
+                </div>
+                <button onclick="Profile.openAvatarModal()" class="text-xs bg-purple-900/50 text-purple-300 px-3 py-1.5 rounded-lg border border-purple-500/40">Ganti Avatar</button>
+            </div>
+
+            <!-- Detailed Stats Grid -->
+            <div class="glass-card p-4 mb-4">
+                <h3 class="font-bold text-sm text-purple-300 mb-3 border-b border-gray-800 pb-2">⚔️ Stat Karakter</h3>
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div class="flex justify-between bg-gray-900/50 p-2 rounded border border-gray-800">
+                        <span class="text-gray-400">Max HP:</span>
+                        <span id="stat-hp" class="font-bold text-green-400">100</span>
+                    </div>
+                    <div class="flex justify-between bg-gray-900/50 p-2 rounded border border-gray-800">
+                        <span class="text-gray-400">Attack (ATK):</span>
+                        <span id="stat-atk" class="font-bold text-red-400">10</span>
+                    </div>
+                    <div class="flex justify-between bg-gray-900/50 p-2 rounded border border-gray-800">
+                        <span class="text-gray-400">Defense (DEF):</span>
+                        <span id="stat-def" class="font-bold text-blue-400">0</span>
+                    </div>
+                    <div class="flex justify-between bg-gray-900/50 p-2 rounded border border-gray-800">
+                        <span class="text-gray-400">Crit Rate:</span>
+                        <span id="stat-crit" class="font-bold text-yellow-400">5%</span>
+                    </div>
+                    <div class="flex justify-between bg-gray-900/50 p-2 rounded border border-gray-800">
+                        <span class="text-gray-400">Lifesteal:</span>
+                        <span id="stat-lifesteal" class="font-bold text-purple-400">0%</span>
+                    </div>
+                    <div class="flex justify-between bg-gray-900/50 p-2 rounded border border-gray-800">
+                        <span class="text-gray-400">Potion HP:</span>
+                        <span id="stat-potions" class="font-bold text-pink-400">3x</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lifetime Progress Stats -->
+            <div class="glass-card p-4">
+                <h3 class="font-bold text-sm text-purple-300 mb-3 border-b border-gray-800 pb-2">📊 Catatan Rekam Jejak</h3>
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <div class="bg-gray-900/50 p-2.5 rounded border border-gray-800 text-center">
+                        <div id="stat-battles" class="text-lg font-extrabold text-purple-300">0</div>
+                        <div class="text-[10px] text-gray-400 uppercase tracking-wider">Menang Perang</div>
+                    </div>
+                    <div class="bg-gray-900/50 p-2.5 rounded border border-gray-800 text-center">
+                        <div id="stat-crops" class="text-lg font-extrabold text-green-400">0</div>
+                        <div class="text-[10px] text-gray-400 uppercase tracking-wider">Hasil Panen</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB: LADANG (FARM) ================= -->
+        <div id="tab-farm" class="tab-content active">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-xl font-bold text-purple-400 flex items-center gap-1">🌾 Ladang & Pertanian</h2>
+                <button onclick="Farm.openExpandModal()" class="btn-purple text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 font-bold">
+                    ➕ Perluas Lahan
+                </button>
+            </div>
+
+            <!-- Seed Selector Selector Bar -->
+            <div class="glass-card p-2.5 mb-4">
+                <div class="text-xs text-gray-400 mb-2 font-semibold">Pilih Bibit Ditanam:</div>
+                <div class="flex gap-2 overflow-x-auto pb-1" id="seed-selector">
+                    <!-- Dynamic seed buttons -->
+                </div>
+            </div>
+
+            <!-- Farm Grid (3x4 = 12 Max Plots) -->
+            <div id="farm-grid" class="grid grid-cols-3 gap-3 mb-4">
+                <!-- Plots populated by JS -->
+            </div>
+        </div>
+
+        <!-- ================= TAB: PERANG (COMBAT & DUNGEONS) ================= -->
+        <div id="tab-combat" class="tab-content">
+            <div id="combat-select-screen">
+                <h2 class="text-xl font-bold text-purple-400 mb-2">⚔️ Pilih Wilayah Dungeoon</h2>
+                <p class="text-xs text-gray-400 mb-4">Kalahkan monster untuk mendapatkan XP, Koin, dan Diamond!</p>
+
+                <div class="flex flex-col gap-3" id="dungeon-list">
+                    <!-- Dungeon stages populated by JS -->
+                </div>
+            </div>
+
+            <!-- Active Battle View -->
+            <div id="combat-battle-screen" class="hidden flex flex-col gap-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs bg-purple-900/80 px-2.5 py-1 rounded text-purple-300 font-bold" id="battle-stage-title">Dungeon</span>
+                    <button onclick="Combat.flee()" class="text-xs text-gray-400 hover:text-red-400">🏃‍♂️ Kabur</button>
+                </div>
+
+                <!-- Enemy Box -->
+                <div class="glass-card p-4 flex flex-col items-center relative border-red-500/30" id="enemy-box">
+                    <span id="enemy-name" class="font-bold text-sm text-red-400 mb-1">Slime</span>
+                    <div id="enemy-sprite" class="text-6xl my-2">🧌</div>
+                    <div class="w-full bg-gray-900 rounded-full h-3.5 relative overflow-hidden border border-gray-700">
+                        <div id="enemy-hp-bar" class="h-full bg-red-500 transition-all duration-200" style="width: 100%;"></div>
+                        <span id="enemy-hp-text" class="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white">50/50</span>
+                    </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="text-center font-black text-gray-600 text-xs tracking-widest">VS</div>
+
+                <!-- Player Box -->
+                <div class="glass-card p-4 flex flex-col items-center relative border-purple-500/30" id="player-box">
+                    <div class="w-full flex justify-between items-center mb-1">
+                        <span id="battle-player-name" class="font-bold text-sm text-purple-300">Hero</span>
+                        <span class="text-[10px] text-gray-400">⚔️ <span id="battle-player-atk">10</span></span>
+                    </div>
+                    <div class="w-full bg-gray-900 rounded-full h-3.5 relative overflow-hidden border border-gray-700 mb-2">
+                        <div id="player-hp-bar" class="h-full bg-green-500 transition-all duration-200" style="width: 100%;"></div>
+                        <span id="player-hp-text" class="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white">100/100</span>
+                    </div>
+                </div>
+
+                <!-- Actions Grid -->
+                <div class="grid grid-cols-3 gap-2 mt-1">
+                    <button onclick="Combat.playerAttack()" class="btn-purple py-3 rounded-xl font-bold text-sm flex flex-col items-center">
+                        <span>⚔️ Attack</span>
+                    </button>
+                    <button onclick="Combat.playerSkill()" class="bg-amber-600 hover:bg-amber-500 text-white py-3 rounded-xl font-bold text-sm flex flex-col items-center shadow-lg transition-transform active:scale-95">
+                        <span>✨ Skill</span>
+                        <span class="text-[9px] font-normal opacity-80">2x Dmg (Crit)</span>
+                    </button>
+                    <button onclick="Combat.usePotion()" class="bg-pink-700 hover:bg-pink-600 text-white py-3 rounded-xl font-bold text-sm flex flex-col items-center shadow-lg transition-transform active:scale-95">
+                        <span>🧪 Heal</span>
+                        <span class="text-[9px] font-normal opacity-80" id="potion-btn-count">3x Left</span>
+                    </button>
+                </div>
+
+                <!-- Battle Log Box -->
+                <div id="battle-log" class="glass-card p-2.5 h-20 overflow-y-auto text-[11px] text-gray-300 flex flex-col gap-1 border-gray-800">
+                    <p class="text-purple-400 italic">Pertarungan dimulai!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB: TOKO (SHOP) ================= -->
+        <div id="tab-shop" class="tab-content">
+            <h2 class="text-xl font-bold text-purple-400 mb-2">🛒 Toko Equipment & Potions</h2>
+            
+            <!-- Shop Subtabs -->
+            <div class="flex gap-2 mb-3">
+                <button id="shop-tab-weapons" onclick="Shop.switchCategory('weapons')" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-purple-900 text-white border border-purple-500/50">Senjata</button>
+                <button id="shop-tab-armors" onclick="Shop.switchCategory('armors')" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-gray-800 text-gray-400 border border-gray-700">Armor</button>
+                <button id="shop-tab-consumables" onclick="Shop.switchCategory('consumables')" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-gray-800 text-gray-400 border border-gray-700">Lainnya</button>
+            </div>
+
+            <div id="shop-items-container" class="flex flex-col gap-3">
+                <!-- Items populated by JS -->
+            </div>
+        </div>
+
+        <!-- ================= TAB: KASINO (MINI GAMES) ================= -->
+        <div id="tab-casino" class="tab-content">
+            <div id="casino-menu">
+                <h2 class="text-xl font-bold text-purple-400 mb-1">🎲 Arena Mini Games</h2>
+                <p class="text-xs text-gray-400 mb-4">Uji keberuntunganmu untuk melipatgandakan Koin & Diamond!</p>
+                
+                <div class="flex flex-col gap-3">
+                    <button onclick="Casino.openGame('slots')" class="glass-card p-3.5 flex items-center gap-3 hover:border-purple-500/50 transition-colors text-left">
+                        <div class="text-3xl bg-purple-900/40 p-2 rounded-xl">🎰</div>
+                        <div>
+                            <h3 class="font-bold text-sm text-white">Slot Machine</h3>
+                            <p class="text-[11px] text-gray-400">Putar slot & dapatkan perkalian jackpot!</p>
+                        </div>
+                    </button>
+                    <button onclick="Casino.openGame('blackjack')" class="glass-card p-3.5 flex items-center gap-3 hover:border-purple-500/50 transition-colors text-left">
+                        <div class="text-3xl bg-purple-900/40 p-2 rounded-xl">🃏</div>
+                        <div>
+                            <h3 class="font-bold text-sm text-white">Blackjack 21</h3>
+                            <p class="text-[11px] text-gray-400">Kalahkan kartu dealer tanpa melebihi angka 21.</p>
+                        </div>
+                    </button>
+                    <button onclick="Casino.openGame('coinflip')" class="glass-card p-3.5 flex items-center gap-3 hover:border-purple-500/50 transition-colors text-left">
+                        <div class="text-3xl bg-purple-900/40 p-2 rounded-xl">🪙</div>
+                        <div>
+                            <h3 class="font-bold text-sm text-white">Coinflip</h3>
+                            <p class="text-[11px] text-gray-400">Pilih Gambar/Angka dengan peluang 50/50.</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Slots Game View -->
+            <div id="casino-slots" class="hidden">
+                <button onclick="Casino.backToMenu()" class="text-xs text-purple-400 mb-3 flex items-center gap-1">← Kembali ke Kasino</button>
+                <h2 class="text-lg font-bold text-center mb-3">🎰 Slot Machine</h2>
+                
+                <div class="glass-card p-4 flex flex-col items-center">
+                    <div class="flex gap-2 mb-4 bg-gray-950 p-4 rounded-xl border border-gray-800 w-full justify-center">
+                        <div class="w-16 h-16 bg-gray-900 rounded-lg flex items-center justify-center text-3xl border border-gray-700 overflow-hidden shadow-inner"><span id="slot-1">🍒</span></div>
+                        <div class="w-16 h-16 bg-gray-900 rounded-lg flex items-center justify-center text-3xl border border-gray-700 overflow-hidden shadow-inner"><span id="slot-2">💎</span></div>
+                        <div class="w-16 h-16 bg-gray-900 rounded-lg flex items-center justify-center text-3xl border border-gray-700 overflow-hidden shadow-inner"><span id="slot-3">🔔</span></div>
+                    </div>
+
+                    <div class="w-full flex gap-2 mb-3">
+                        <div class="flex-1">
+                            <label class="text-[10px] text-gray-400">Taruhan:</label>
+                            <input type="number" id="slots-bet-input" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-xs text-white outline-none focus:border-purple-500" value="20" min="1">
+                        </div>
+                        <div class="flex-1">
+                            <label class="text-[10px] text-gray-400">Mata Uang:</label>
+                            <select id="slots-currency" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-xs text-white outline-none">
+                                <option value="coins">🪙 Koin</option>
+                                <option value="diamonds">💎 Diamond</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button onclick="Casino.playSlots()" id="btn-spin-slots" class="w-full btn-purple py-3 rounded-lg font-bold text-sm">SPIN 🎰</button>
+                    <p class="text-[10px] text-gray-400 mt-3 text-center">Hasil: 2 Sama = 2x | 3 Sama = 10x Jackpot!</p>
+                </div>
+            </div>
+
+            <!-- Blackjack Game View -->
+            <div id="casino-blackjack" class="hidden">
+                <button onclick="Casino.backToMenu()" class="text-xs text-purple-400 mb-2 flex items-center gap-1">← Kembali ke Kasino</button>
+                <h2 class="text-lg font-bold mb-3">🃏 Blackjack 21</h2>
+
+                <div id="bj-bet-screen" class="glass-card p-4">
+                    <label class="text-xs text-gray-400 mb-1 block">Jumlah Taruhan (Koin):</label>
+                    <input type="number" id="bj-bet-input" class="w-full bg-gray-900 border border-gray-700 rounded p-2.5 text-xs text-white mb-3" value="50" min="10">
+                    <button onclick="Blackjack.start()" class="w-full btn-purple py-2.5 rounded-lg font-bold text-xs">MAIN (DEAL)</button>
+                </div>
+
+                <div id="bj-play-screen" class="hidden flex flex-col gap-3">
+                    <!-- Dealer Card Area -->
+                    <div class="glass-card p-3">
+                        <div class="flex justify-between text-xs text-gray-400 mb-2">
+                            <span>Dealer</span>
+                            <span id="bj-dealer-score">?</span>
+                        </div>
+                        <div id="bj-dealer-cards" class="flex gap-2 min-h-[60px]"></div>
+                    </div>
+
+                    <!-- Player Card Area -->
+                    <div class="glass-card p-3 border-purple-500/40">
+                        <div class="flex justify-between text-xs text-purple-300 font-bold mb-2">
+                            <span>Kartu Kamu</span>
+                            <span id="bj-player-score">0</span>
+                        </div>
+                        <div id="bj-player-cards" class="flex gap-2 min-h-[60px]"></div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div id="bj-actions" class="grid grid-cols-3 gap-2">
+                        <button onclick="Blackjack.hit()" class="bg-blue-600 hover:bg-blue-500 py-2.5 rounded text-xs font-bold text-white">HIT (+1)</button>
+                        <button onclick="Blackjack.stand()" class="bg-red-600 hover:bg-red-500 py-2.5 rounded text-xs font-bold text-white">STAND</button>
+                        <button onclick="Blackjack.doubleDown()" class="bg-amber-600 hover:bg-amber-500 py-2.5 rounded text-xs font-bold text-white">DOUBLE</button>
+                    </div>
+
+                    <div id="bj-result" class="hidden text-center text-sm font-bold py-2"></div>
+                    <button id="bj-play-again" onclick="Blackjack.resetScreen()" class="hidden w-full btn-purple py-2.5 rounded-lg font-bold text-xs">MAIN LAGI</button>
+                </div>
+            </div>
+
+            <!-- Coinflip Game View -->
+            <div id="casino-coinflip" class="hidden">
+                <button onclick="Casino.backToMenu()" class="text-xs text-purple-400 mb-3 flex items-center gap-1">← Kembali ke Kasino</button>
+                <h2 class="text-lg font-bold text-center mb-3">🪙 Coinflip</h2>
+
+                <div class="glass-card p-4 flex flex-col items-center">
+                    <div id="coin-visual" class="w-20 h-20 bg-yellow-500 rounded-full flex items-center justify-center text-3xl font-bold text-yellow-950 border-4 border-yellow-600 mb-4 shadow-lg">?</div>
+
+                    <div class="w-full mb-3">
+                        <label class="text-[10px] text-gray-400">Taruhan (Koin):</label>
+                        <input type="number" id="coinflip-bet-input" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-xs text-white" value="25" min="1">
+                    </div>
+
+                    <div class="flex gap-3 w-full">
+                        <button onclick="Casino.playCoinflip('heads')" class="flex-1 btn-purple py-2.5 rounded-lg font-bold text-xs">HEADS (Gambar)</button>
+                        <button onclick="Casino.playCoinflip('tails')" class="flex-1 btn-purple py-2.5 rounded-lg font-bold text-xs">TAILS (Angka)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB: PENGATURAN (SETTINGS & SAVE) ================= -->
+        <div id="tab-settings" class="tab-content">
+            <h2 class="text-xl font-bold text-purple-400 mb-3">⚙️ Pengaturan Data Save</h2>
+
+            <div class="flex flex-col gap-4">
+                <!-- Export File TXT -->
+                <div class="glass-card p-4">
+                    <h3 class="font-bold text-xs text-purple-300 mb-1">📥 Export Save Game (.txt)</h3>
+                    <p class="text-[11px] text-gray-400 mb-3">Simpan progress gamemu ke dalam file .txt terpisah agar aman!</p>
+                    <button onclick="Settings.exportSaveTxt()" class="w-full btn-purple py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2">
+                        📄 Download Save File (.txt)
+                    </button>
+                </div>
+
+                <!-- Import File TXT or String -->
+                <div class="glass-card p-4">
+                    <h3 class="font-bold text-xs text-purple-300 mb-1">📤 Import Save Game</h3>
+                    <p class="text-[11px] text-gray-400 mb-2">Upload file .txt atau paste teks kode save di bawah:</p>
+                    
+                    <input type="file" id="import-file-input" accept=".txt,.json" onchange="Settings.handleFileUpload(event)" class="text-xs text-gray-400 mb-2 w-full">
+                    
+                    <textarea id="import-text-area" rows="3" class="w-full bg-gray-950 border border-gray-700 rounded p-2 text-[10px] text-gray-300 outline-none resize-none mb-2" placeholder="Atau paste teks save JSON di sini..."></textarea>
+                    
+                    <button onclick="Settings.importSaveText()" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg text-xs font-bold transition-colors">
+                        Restore Save Progress
+                    </button>
+                </div>
+
+                <!-- Reset Game -->
+                <div class="glass-card p-4 border-red-500/30">
+                    <h3 class="font-bold text-xs text-red-400 mb-1">⚠️ Reset Progress Game</h3>
+                    <p class="text-[11px] text-gray-400 mb-3">Hapus semua data game dan ulang dari awal.</p>
+                    <button onclick="Settings.resetGamePrompt()" class="w-full bg-red-900/60 text-red-300 border border-red-700 hover:bg-red-800 py-2 rounded-lg text-xs font-bold">
+                        Hapus Semua Data
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Bottom Mobile Navigation Bar -->
+    <nav class="bg-gray-950 border-t border-purple-900/30 h-16 flex-shrink-0 flex items-center justify-around z-40 relative">
+        <button class="nav-btn flex flex-col items-center gap-1 text-purple-400 w-1/5" onclick="Nav.switchTab('farm', this)">
+            <span class="text-lg">🌾</span><span class="text-[9px] font-bold">Ladang</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center gap-1 text-gray-500 w-1/5" onclick="Nav.switchTab('combat', this)">
+            <span class="text-lg">⚔️</span><span class="text-[9px] font-bold">Perang</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center gap-1 text-gray-500 w-1/5" onclick="Nav.switchTab('shop', this)">
+            <span class="text-lg">🛒</span><span class="text-[9px] font-bold">Toko</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center gap-1 text-gray-500 w-1/5" onclick="Nav.switchTab('casino', this)">
+            <span class="text-lg">🎲</span><span class="text-[9px] font-bold">Kasino</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center gap-1 text-gray-500 w-1/5" onclick="Nav.switchTab('profile', this)">
+            <span class="text-lg">👤</span><span class="text-[9px] font-bold">Profil</span>
+        </button>
+    </nav>
+
+    <!-- Custom Modals Overlay Container -->
+    <div id="modal-container" class="hidden modal-overlay">
+        <!-- Content dynamically injected -->
+    </div>
+
+</div>
+
+<script>
+    // ================= DATA CONFIG & DATABASES =================
+    const SAVE_KEY = "quest_cultivate_v2_save";
+
+    const CROPS_DB = {
+        padi: { name: "Padi", time: 4000, coins: 15, xp: 10, diamondChance: 0, icon: "🌾", seedPrice: 5, currency: "coins" },
+        jagung: { name: "Jagung", time: 8000, coins: 45, xp: 25, diamondChance: 0.05, icon: "🌽", seedPrice: 15, currency: "coins" },
+        cabai: { name: "Cabai Emas", time: 15000, coins: 120, xp: 60, diamondChance: 0.15, icon: "🌶️", seedPrice: 40, currency: "coins" },
+        bunga: { name: "Bunga Kristal", time: 30000, coins: 300, xp: 150, diamondChance: 0.35, icon: "🪷", seedPrice: 100, currency: "coins" },
+        diamond_tree: { name: "Pohon Diamond", time: 60000, coins: 600, xp: 300, diamondChance: 1.0, icon: "💎", seedPrice: 5, currency: "diamonds" }
+    };
+
+    const WEAPONS_DB = {
+        pedang_kayu: { name: "Pedang Kayu", atk: 2, crit: 0, lifesteal: 0, price: 0, currency: "coins", icon: "🗡️", desc: "Senjata latihan sederhana." },
+        belati_besi: { name: "Belati Besi", atk: 15, crit: 5, lifesteal: 0, price: 150, currency: "coins", icon: "🗡️", desc: "Cepat dan lumayan tajam." },
+        katana_api: { name: "Pedang Katana Api", atk: 40, crit: 10, lifesteal: 0, price: 600, currency: "coins", icon: "⚔️", desc: "Tebasan membara." },
+        tongkat_sihir: { name: "Tongkat Kristal Sihir", atk: 70, crit: 15, lifesteal: 0, price: 1500, currency: "coins", icon: "🔮", desc: "Kekuatan sihir elemen." },
+        sabit_kegelapan: { name: "Sabit Kegelapan", atk: 120, crit: 25, lifesteal: 10, price: 50, currency: "diamonds", icon: "🪓", desc: "Mengisap HP musuh saat menyerang!" },
+        blade_azusa: { name: "Blade of Azusa", atk: 200, crit: 35, lifesteal: 20, price: 150, currency: "diamonds", icon: "⚡", desc: "Pedang mitos dengan kekuatan kilat mutlak." }
+    };
+
+    const ARMORS_DB = {
+        baju_kain: { name: "Baju Kain", hp: 10, def: 1, price: 0, currency: "coins", icon: "👕", desc: "Pakaian biasa pemula." },
+        zirah_besi: { name: "Zirah Besi", hp: 50, def: 5, price: 200, currency: "coins", icon: "🛡️", desc: "Pelindung besi standar." },
+        pelindung_kristal: { name: "Pelindung Kristal", hp: 150, def: 15, price: 1000, currency: "coins", icon: "🛡️", desc: "Memantulkan sebagian serangan." },
+        zirah_naga: { name: "Zirah Naga Abadi", hp: 400, def: 35, price: 80, currency: "diamonds", icon: "🐉", desc: "Dibuat dari sisik naga legendaris." }
+    };
+
+    const DUNGEONS_DB = [
+        { id: 'hutan', name: 'Hutan Pinggiran', reqLevel: 1, icon: '🌲', desc: 'Sangat cocok untuk pemula.', enemies: [
+            { name: "Slime Hijau", hp: 40, atk: 6, def: 0, xp: 20, coins: 15, diamondChance: 0, sprite: "🧌" },
+            { name: "Serigala Hutan", hp: 75, atk: 12, def: 2, xp: 35, coins: 30, diamondChance: 0.05, sprite: "🐺" }
+        ]},
+        { id: 'goa', name: 'Goa Kristal', reqLevel: 3, icon: '💎', desc: 'Dungeon menengah berhadiah lumayan.', enemies: [
+            { name: "Golem Batu", hp: 160, atk: 22, def: 8, xp: 80, coins: 70, diamondChance: 0.15, sprite: "🗿" },
+            { name: "Elemen Kristal", hp: 240, atk: 30, def: 12, xp: 130, coins: 120, diamondChance: 0.3, sprite: "👾" }
+        ]},
+        { id: 'benteng', name: 'Benteng Kegelapan', reqLevel: 6, icon: '🏰', desc: 'Musuh sangat kuat & Diamond melimpah.', enemies: [
+            { name: "Tengkorak Zirah", hp: 400, atk: 48, def: 20, xp: 250, coins: 250, diamondChance: 0.5, sprite: "💀" },
+            { name: "Iblis Merah", hp: 600, atk: 65, def: 28, xp: 400, coins: 400, diamondChance: 0.8, sprite: "👹" }
+        ]},
+        { id: 'naga', name: 'Sarang Naga (BOSS)', reqLevel: 10, icon: '🐲', desc: 'Boss Stage! Dijamin dapat Diamond banyak.', enemies: [
+            { name: "Naga Api Merah", hp: 1300, atk: 95, def: 45, xp: 1200, coins: 1200, diamondGuaranteed: 8, sprite: "🐉" }
+        ]}
+    ];
+
+    // --- GAME INITIAL STATE ---
+    const INITIAL_STATE = {
+        player: {
+            name: "Hero",
+            avatar: "🧙‍♂️",
+            level: 1,
+            xp: 0,
+            coins: 100,
+            diamonds: 10,
+            potions: 3,
+            stats: { battlesWon: 0, cropsHarvested: 0 }
+        },
+        farm: {
+            unlockedPlots: 4, // Max 12
+            selectedSeed: 'padi',
+            plots: Array.from({length: 12}, () => ({ state: 'empty', cropType: null, readyTime: 0 }))
+        },
+        equipment: {
+            weapon: 'pedang_kayu',
+            armor: 'baju_kain'
+        },
+        inventory: ['pedang_kayu', 'baju_kain']
+    };
+
+    let game = JSON.parse(JSON.stringify(INITIAL_STATE));
+    let farmInterval;
+    let autoSaveInterval;
+
+    // --- UTILITIES ---
+    const Utils = {
+        toast: (msg) => {
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = 'toast animate-pop';
+            el.innerText = msg;
+            container.appendChild(el);
+            setTimeout(() => {
+                el.style.opacity = '0';
+                el.style.transition = 'opacity 0.3s';
+                setTimeout(() => el.remove(), 300);
+            }, 2200);
+        },
+        floatingText: (text, parentId, colorClass = 'text-red-500') => {
+            const parent = document.getElementById(parentId);
+            if (!parent) return;
+            const el = document.createElement('div');
+            el.className = `floating-text ${colorClass} text-xl`;
+            el.innerText = text;
+            
+            const offsetX = (Math.random() - 0.5) * 40;
+            el.style.left = `calc(50% + ${offsetX}px)`;
+            el.style.top = `40%`;
+            
+            parent.appendChild(el);
+            setTimeout(() => el.remove(), 900);
+        },
+        saveGame: () => {
+            localStorage.setItem(SAVE_KEY, JSON.stringify(game));
+        },
+        loadGame: () => {
+            const saved = localStorage.getItem(SAVE_KEY);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    game = { ...INITIAL_STATE, ...parsed };
+                    game.player = { ...INITIAL_STATE.player, ...parsed.player };
+                    game.player.stats = { ...INITIAL_STATE.player.stats, ...(parsed.player.stats || {}) };
+                    game.farm = { ...INITIAL_STATE.farm, ...parsed.farm };
+                    game.equipment = { ...INITIAL_STATE.equipment, ...parsed.equipment };
+                } catch(e) { console.error("Save corrupted", e); }
+            }
+        },
+        getXpNeeded: (lvl) => lvl * 100,
+        addXp: (amount) => {
+            game.player.xp += amount;
+            let needed = Utils.getXpNeeded(game.player.level);
+            let lvlUp = false;
+            while (game.player.xp >= needed) {
+                game.player.xp -= needed;
+                game.player.level++;
+                needed = Utils.getXpNeeded(game.player.level);
+                lvlUp = true;
+            }
+            if (lvlUp) Utils.toast(`🎉 LEVEL UP! Kamu sekarang Level ${game.player.level}`);
+            UI.updateHeader();
+        },
+        addCoins: (amt) => { game.player.coins = Math.max(0, game.player.coins + amt); UI.updateHeader(); },
+        addDiamonds: (amt) => { game.player.diamonds = Math.max(0, game.player.diamonds + amt); UI.updateHeader(); },
+        getCalculatedStats: () => {
+            const lvl = game.player.level;
+            const w = WEAPONS_DB[game.equipment.weapon] || WEAPONS_DB.pedang_kayu;
+            const a = ARMORS_DB[game.equipment.armor] || ARMORS_DB.baju_kain;
+
+            const maxHp = 100 + ((lvl - 1) * 20) + (a.hp || 0);
+            const atk = 10 + ((lvl - 1) * 3) + (w.atk || 0);
+            const def = 0 + ((lvl - 1) * 1) + (a.def || 0);
+            const crit = 5 + (w.crit || 0);
+            const lifesteal = 0 + (w.lifesteal || 0);
+
+            return { maxHp, atk, def, crit, lifesteal };
+        }
+    };
+
+    // --- NAVIGATION ---
+    const Nav = {
+        switchTab: (tabId, btnElement) => {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            
+            if (btnElement) {
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('text-purple-400');
+                    btn.classList.add('text-gray-500');
+                });
+                btnElement.classList.remove('text-gray-500');
+                btnElement.classList.add('text-purple-400');
+            }
+            
+            // Tab Specific Refresh
+            if (tabId === 'profile') Profile.render();
+            if (tabId === 'farm') Farm.render();
+            if (tabId === 'shop') Shop.render();
+            if (tabId === 'combat') Combat.renderDungeonList();
+        }
+    };
+
+    // --- UI UPDATER ---
+    const UI = {
+        updateHeader: () => {
+            document.getElementById('header-name').innerText = game.player.name;
+            document.getElementById('header-avatar').innerText = game.player.avatar;
+            document.getElementById('header-level').innerText = game.player.level;
+            document.getElementById('header-coins').innerText = game.player.coins;
+            document.getElementById('header-diamonds').innerText = game.player.diamonds;
+
+            const needed = Utils.getXpNeeded(game.player.level);
+            const pct = Math.min(100, (game.player.xp / needed) * 100);
+            document.getElementById('header-xp-bar').style.width = pct + '%';
+        },
+        init: () => {
+            Utils.loadGame();
+            UI.updateHeader();
+            Farm.init();
+            Shop.init();
+            
+            autoSaveInterval = setInterval(Utils.saveGame, 5000);
+        }
+    };
+
+    // --- PROFILE SYSTEM ---
+    const Profile = {
+        render: () => {
+            document.getElementById('profile-name-display').innerText = game.player.name;
+            document.getElementById('profile-avatar-display').innerText = game.player.avatar;
+            document.getElementById('profile-level').innerText = game.player.level;
+
+            const stats = Utils.getCalculatedStats();
+            document.getElementById('stat-hp').innerText = stats.maxHp;
+            document.getElementById('stat-atk').innerText = stats.atk;
+            document.getElementById('stat-def').innerText = stats.def;
+            document.getElementById('stat-crit').innerText = stats.crit + '%';
+            document.getElementById('stat-lifesteal').innerText = stats.lifesteal + '%';
+            document.getElementById('stat-potions').innerText = game.player.potions + 'x';
+
+            document.getElementById('stat-battles').innerText = game.player.stats.battlesWon;
+            document.getElementById('stat-crops').innerText = game.player.stats.cropsHarvested;
+        },
+        openEditModal: () => {
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+                <div class="glass-card p-5 w-full max-w-xs animate-pop">
+                    <h3 class="font-bold text-sm text-purple-300 mb-3">Ganti Nama Player</h3>
+                    <input type="text" id="new-name-input" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-xs text-white mb-4 outline-none focus:border-purple-500" value="${game.player.name}">
+                    <div class="flex gap-2">
+                        <button onclick="Profile.closeModal()" class="flex-1 bg-gray-800 text-gray-300 py-2 rounded text-xs font-bold">Batal</button>
+                        <button onclick="Profile.saveName()" class="flex-1 btn-purple py-2 rounded text-xs font-bold">Simpan</button>
+                    </div>
+                </div>
+            `;
+            container.classList.remove('hidden');
+        },
+        saveName: () => {
+            const val = document.getElementById('new-name-input').value.trim();
+            if (val) {
+                game.player.name = val.substring(0, 12);
+                UI.updateHeader();
+                Profile.render();
+                Utils.toast("Nama diperbarui!");
+            }
+            Profile.closeModal();
+        },
+        openAvatarModal: () => {
+            const avatars = ['🧙‍♂️', '🥷', '⚔️', '🤴', '🧝‍♀️', '👑', '🦸‍♂️', '🧛‍♂️'];
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+                <div class="glass-card p-5 w-full max-w-xs animate-pop text-center">
+                    <h3 class="font-bold text-sm text-purple-300 mb-3">Pilih Avatar</h3>
+                    <div class="grid grid-cols-4 gap-3 mb-4">
+                        ${avatars.map(a => `<button onclick="Profile.selectAvatar('${a}')" class="text-2xl bg-gray-900 p-2 rounded-xl hover:bg-purple-900/50">${a}</button>`).join('')}
+                    </div>
+                    <button onclick="Profile.closeModal()" class="w-full bg-gray-800 text-gray-300 py-2 rounded text-xs font-bold">Tutup</button>
+                </div>
+            `;
+            container.classList.remove('hidden');
+        },
+        selectAvatar: (avatar) => {
+            game.player.avatar = avatar;
+            UI.updateHeader();
+            Profile.render();
+            Profile.closeModal();
+            Utils.toast("Avatar diganti!");
+        },
+        closeModal: () => {
+            document.getElementById('modal-container').classList.add('hidden');
+        }
+    };
+
+    // --- FARM SYSTEM ---
+    const Farm = {
+        init: () => {
+            Farm.renderSeedSelector();
+            Farm.renderGrid();
+            if (farmInterval) clearInterval(farmInterval);
+            farmInterval = setInterval(Farm.updateLoop, 200);
+        },
+        renderSeedSelector: () => {
+            const container = document.getElementById('seed-selector');
+            container.innerHTML = '';
+            Object.keys(CROPS_DB).forEach(key => {
+                const c = CROPS_DB[key];
+                const isSelected = game.farm.selectedSeed === key;
+                const btn = document.createElement('button');
+                btn.className = `flex-shrink-0 px-3 py-1.5 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all ${isSelected ? 'bg-purple-900/80 border-purple-400 text-white' : 'bg-gray-900/80 border-gray-800 text-gray-400'}`;
+                btn.innerHTML = `<span>${c.icon}</span> <span>${c.name}</span>`;
+                btn.onclick = () => {
+                    game.farm.selectedSeed = key;
+                    Farm.renderSeedSelector();
+                };
+                container.appendChild(btn);
+            });
+        },
+        renderGrid: () => {
+            const grid = document.getElementById('farm-grid');
+            grid.innerHTML = '';
+            
+            for (let i = 0; i < 12; i++) {
+                const isUnlocked = i < game.farm.unlockedPlots;
+                const el = document.createElement('div');
+                el.id = 'plot-' + i;
+                
+                if (!isUnlocked) {
+                    el.className = 'farm-plot locked';
+                    el.innerHTML = '🔒';
+                    el.onclick = () => Farm.openExpandModal();
+                } else {
+                    el.className = 'farm-plot';
+                    el.onclick = () => Farm.interactPlot(i);
+                }
+                grid.appendChild(el);
+            }
+            Farm.updateLoop();
+        },
+        render: () => {
+            Farm.renderSeedSelector();
+            Farm.renderGrid();
+        },
+        interactPlot: (index) => {
+            const plot = game.farm.plots[index];
+            const now = Date.now();
+
+            if (plot.state === 'empty') {
+                const cropKey = game.farm.selectedSeed;
+                const crop = CROPS_DB[cropKey];
+
+                // Check cost
+                if (crop.currency === 'coins' && game.player.coins < crop.seedPrice) {
+                    return Utils.toast(`Koin tidak cukup! Butuh ${crop.seedPrice}🪙`);
+                }
+                if (crop.currency === 'diamonds' && game.player.diamonds < crop.seedPrice) {
+                    return Utils.toast(`Diamond tidak cukup! Butuh ${crop.seedPrice}💎`);
+                }
+
+                // Deduct cost
+                if (crop.currency === 'coins') Utils.addCoins(-crop.seedPrice);
+                else Utils.addDiamonds(-crop.seedPrice);
+
+                plot.state = 'growing';
+                plot.cropType = cropKey;
+                plot.readyTime = now + crop.time;
+
+                Utils.toast(`Tanam ${crop.name}`);
+            } else if (plot.state === 'ready') {
+                const crop = CROPS_DB[plot.cropType];
+                plot.state = 'empty';
+                plot.cropType = null;
+                plot.readyTime = 0;
+
+                // Yield
+                Utils.addCoins(crop.coins);
+                Utils.addXp(crop.xp);
+                game.player.stats.cropsHarvested++;
+
+                let msg = `Panen ${crop.name}! +${crop.coins}🪙 +${crop.xp}XP`;
+
+                // Diamond Drop Chance
+                if (crop.diamondChance > 0 && Math.random() < crop.diamondChance) {
+                    Utils.addDiamonds(1);
+                    msg += " +1💎";
+                }
+
+                Utils.toast(msg);
+            }
+            Farm.updatePlotVisual(index);
+        },
+        updateLoop: () => {
+            const now = Date.now();
+            for (let i = 0; i < game.farm.unlockedPlots; i++) {
+                const plot = game.farm.plots[i];
+                if (plot.state === 'growing') {
+                    if (now >= plot.readyTime) {
+                        plot.state = 'ready';
+                    }
+                    Farm.updatePlotVisual(i, now);
+                }
+            }
+        },
+        updatePlotVisual: (index, now = Date.now()) => {
+            const plot = game.farm.plots[index];
+            const el = document.getElementById('plot-' + index);
+            if (!el || index >= game.farm.unlockedPlots) return;
+
+            el.className = 'farm-plot';
+            el.innerHTML = '';
+
+            if (plot.state === 'empty') {
+                // Empty brown soil
+            } else if (plot.state === 'growing') {
+                const crop = CROPS_DB[plot.cropType];
+                el.classList.add('growing');
+                el.innerHTML = crop.icon;
+                const total = crop.time;
+                const remaining = Math.max(0, plot.readyTime - now);
+                const progress = ((total - remaining) / total) * 100;
+                el.style.setProperty('--progress', `${progress}%`);
+            } else if (plot.state === 'ready') {
+                const crop = CROPS_DB[plot.cropType];
+                el.classList.add('ready', 'animate-pop');
+                el.innerHTML = crop.icon;
+            }
+        },
+        getExpandCost: () => {
+            // Plot costs scale
+            const nextPlot = game.farm.unlockedPlots + 1;
+            return (nextPlot - 4) * 20; // 20, 40, 60, 80, 100, 120, 140, 160
+        },
+        openExpandModal: () => {
+            if (game.farm.unlockedPlots >= 12) {
+                return Utils.toast("Lahan pertanianmu sudah maksimal (12 Plot)!");
+            }
+            const cost = Farm.getExpandCost();
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+                <div class="glass-card p-5 w-full max-w-xs animate-pop text-center">
+                    <h3 class="font-bold text-sm text-purple-300 mb-2">➕ Perluas Lahan Pertanian</h3>
+                    <p class="text-xs text-gray-400 mb-4">Buka Plot Lahan ke-${game.farm.unlockedPlots + 1} seharga <span class="text-cyan-300 font-bold">${cost} 💎 Diamond</span>?</p>
+                    <div class="flex gap-2">
+                        <button onclick="Profile.closeModal()" class="flex-1 bg-gray-800 text-gray-300 py-2 rounded text-xs font-bold">Batal</button>
+                        <button onclick="Farm.buyExpandPlot(${cost})" class="flex-1 btn-purple py-2 rounded text-xs font-bold">Beli Lahan</button>
+                    </div>
+                </div>
+            `;
+            container.classList.remove('hidden');
+        },
+        buyExpandPlot: (cost) => {
+            if (game.player.diamonds < cost) {
+                Profile.closeModal();
+                return Utils.toast("Diamond kamu tidak cukup!");
+            }
+            Utils.addDiamonds(-cost);
+            game.farm.unlockedPlots++;
+            Farm.renderGrid();
+            Profile.closeModal();
+            Utils.toast(`Lahan diperluas menjadi ${game.farm.unlockedPlots} Plot!`);
+        }
+    };
+
+    // --- COMBAT SYSTEM ---
+    const Combat = {
+        activeDungeon: null,
+        enemy: null,
+        playerHp: 100,
+        playerMaxHp: 100,
+
+        renderDungeonList: () => {
+            const container = document.getElementById('dungeon-list');
+            container.innerHTML = '';
+            
+            DUNGEONS_DB.forEach(d => {
+                const isLocked = game.player.level < d.reqLevel;
+                const html = `
+                    <div class="glass-card p-3.5 flex items-center justify-between border ${isLocked ? 'border-gray-800 opacity-60' : 'border-purple-500/30'}">
+                        <div class="flex items-center gap-3">
+                            <div class="text-3xl bg-purple-900/40 p-2.5 rounded-xl">${d.icon}</div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-bold text-sm text-white">${d.name}</h3>
+                                    ${isLocked ? `<span class="text-[9px] bg-red-900/80 text-red-300 px-1.5 py-0.5 rounded">Lvl ${d.reqLevel}</span>` : ''}
+                                </div>
+                                <p class="text-[11px] text-gray-400">${d.desc}</p>
+                            </div>
+                        </div>
+                        <button ${isLocked ? 'disabled' : ''} onclick="Combat.startDungeon('${d.id}')" class="btn-purple px-3.5 py-2 rounded-lg text-xs font-bold flex-shrink-0">
+                            Masuk
+                        </button>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+        },
+        startDungeon: (dungeonId) => {
+            const dungeon = DUNGEONS_DB.find(d => d.id === dungeonId);
+            if (!dungeon) return;
+
+            Combat.activeDungeon = dungeon;
+            const stats = Utils.getCalculatedStats();
+            Combat.playerMaxHp = stats.maxHp;
+            Combat.playerHp = stats.maxHp;
+
+            document.getElementById('combat-select-screen').classList.add('hidden');
+            document.getElementById('combat-battle-screen').classList.remove('hidden');
+            document.getElementById('battle-stage-title').innerText = dungeon.name;
+
+            Combat.spawnEnemy();
+            Combat.logClear();
+            Combat.log(`Memasuki ${dungeon.name}...`);
+        },
+        spawnEnemy: () => {
+            const enemies = Combat.activeDungeon.enemies;
+            const template = enemies[Math.floor(Math.random() * enemies.length)];
+            
+            Combat.enemy = {
+                ...template,
+                maxHp: template.hp,
+                hp: template.hp
+            };
+            Combat.updateUI();
+        },
+        updateUI: () => {
+            const stats = Utils.getCalculatedStats();
+            document.getElementById('battle-player-name').innerText = game.player.name;
+            document.getElementById('battle-player-atk').innerText = stats.atk;
+
+            // Player HP
+            const pPct = Math.max(0, (Combat.playerHp / Combat.playerMaxHp) * 100);
+            document.getElementById('player-hp-bar').style.width = pPct + '%';
+            document.getElementById('player-hp-text').innerText = `${Math.max(0, Combat.playerHp)}/${Combat.playerMaxHp}`;
+
+            // Enemy HP
+            if (Combat.enemy) {
+                document.getElementById('enemy-name').innerText = Combat.enemy.name;
+                document.getElementById('enemy-sprite').innerText = Combat.enemy.sprite;
+                const ePct = Math.max(0, (Combat.enemy.hp / Combat.enemy.maxHp) * 100);
+                document.getElementById('enemy-hp-bar').style.width = ePct + '%';
+                document.getElementById('enemy-hp-text').innerText = `${Math.max(0, Combat.enemy.hp)}/${Combat.enemy.maxHp}`;
+            }
+
+            document.getElementById('potion-btn-count').innerText = `${game.player.potions}x Left`;
+        },
+        playerAttack: (multiplier = 1, isSkill = false) => {
+            if (!Combat.enemy || Combat.playerHp <= 0) return;
+
+            const stats = Utils.getCalculatedStats();
+            let isCrit = isSkill || (Math.random() * 100 < stats.crit);
+            let dmg = Math.max(1, Math.floor((stats.atk * multiplier) - (Combat.enemy.def * 0.3)));
+            if (isCrit) dmg = Math.floor(dmg * 1.8);
+
+            Combat.enemy.hp -= dmg;
+
+            // Lifesteal
+            if (stats.lifesteal > 0) {
+                const healAmt = Math.floor(dmg * (stats.lifesteal / 100));
+                Combat.playerHp = Math.min(Combat.playerMaxHp, Combat.playerHp + healAmt);
+                if (healAmt > 0) Combat.log(`Mengisap +${healAmt} HP musuh!`);
+            }
+
+            // Visual Shake & Floating Text
+            const eBox = document.getElementById('enemy-box');
+            eBox.classList.remove('animate-hit');
+            void eBox.offsetWidth;
+            eBox.classList.add('animate-hit');
+            Utils.floatingText(`-${dmg}${isCrit ? ' CRIT!' : ''}`, 'enemy-box', isCrit ? 'text-yellow-400' : 'text-red-400');
+
+            Combat.log(`Kamu menyerang ${Combat.enemy.name} sebesar ${dmg} Dmg.`);
+
+            if (Combat.enemy.hp <= 0) {
+                Combat.winBattle();
+            } else {
+                setTimeout(Combat.enemyTurn, 600);
+            }
+            Combat.updateUI();
+        },
+        playerSkill: () => {
+            Combat.playerAttack(2.0, true);
+        },
+        usePotion: () => {
+            if (game.player.potions <= 0) return Utils.toast("Potion HP kamu habis!");
+            game.player.potions--;
+            
+            const healAmt = Math.floor(Combat.playerMaxHp * 0.5); // Heals 50% Max HP
+            Combat.playerHp = Math.min(Combat.playerMaxHp, Combat.playerHp + healAmt);
+            
+            Utils.floatingText(`+${healAmt} HP`, 'player-box', 'text-green-400');
+            Combat.log(`Menggunakan Potion! +${healAmt} HP.`);
+            Combat.updateUI();
+            
+            setTimeout(Combat.enemyTurn, 600);
+        },
+        enemyTurn: () => {
+            if (!Combat.enemy || Combat.enemy.hp <= 0) return;
+
+            const stats = Utils.getCalculatedStats();
+            const dmg = Math.max(1, Combat.enemy.atk - Math.floor(stats.def * 0.5));
+            Combat.playerHp -= dmg;
+
+            const pBox = document.getElementById('player-box');
+            pBox.classList.remove('animate-hit');
+            void pBox.offsetWidth;
+            pBox.classList.add('animate-hit');
+            Utils.floatingText(`-${dmg}`, 'player-box', 'text-red-500');
+
+            Combat.log(`${Combat.enemy.name} menyerang kamu sebesar ${dmg} Dmg.`);
+
+            if (Combat.playerHp <= 0) {
+                Combat.log("Kamu dikalahkan! Kembali ke desa...");
+                setTimeout(() => {
+                    Combat.flee();
+                    Utils.toast("Kamu pingsan dan kembali ke desa.");
+                }, 1200);
+            }
+            Combat.updateUI();
+        },
+        winBattle: () => {
+            game.player.stats.battlesWon++;
+            const e = Combat.enemy;
+            
+            let winCoins = e.coins + Math.floor(Math.random() * 10);
+            let winXp = e.xp;
+            let winDiamonds = e.diamondGuaranteed || 0;
+
+            if (e.diamondChance && Math.random() < e.diamondChance) {
+                winDiamonds += 1;
+            }
+
+            Utils.addCoins(winCoins);
+            Utils.addXp(winXp);
+            if (winDiamonds > 0) Utils.addDiamonds(winDiamonds);
+
+            let msg = `Menang! +${winCoins}🪙 +${winXp}XP`;
+            if (winDiamonds > 0) msg += ` +${winDiamonds}💎`;
+
+            Combat.log(`🎉 ${msg}`);
+            Utils.toast(msg);
+
+            setTimeout(() => {
+                Combat.spawnEnemy();
+            }, 1000);
+        },
+        flee: () => {
+            document.getElementById('combat-battle-screen').classList.add('hidden');
+            document.getElementById('combat-select-screen').classList.remove('hidden');
+        },
+        log: (txt) => {
+            const box = document.getElementById('battle-log');
+            const p = document.createElement('p');
+            p.innerText = '• ' + txt;
+            box.appendChild(p);
+            box.scrollTop = box.scrollHeight;
+        },
+        logClear: () => {
+            document.getElementById('battle-log').innerHTML = '';
+        }
+    };
+
+    // --- SHOP SYSTEM ---
+    const Shop = {
+        activeTab: 'weapons',
+        init: () => {
+            Shop.render();
+        },
+        switchCategory: (cat) => {
+            Shop.activeTab = cat;
+            ['weapons', 'armors', 'consumables'].forEach(c => {
+                const btn = document.getElementById('shop-tab-' + c);
+                if (c === cat) {
+                    btn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-purple-900 text-white border border-purple-500/50";
+                } else {
+                    btn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-gray-800 text-gray-400 border border-gray-700";
+                }
+            });
+            Shop.render();
+        },
+        render: () => {
+            const container = document.getElementById('shop-items-container');
+            container.innerHTML = '';
+
+            if (Shop.activeTab === 'weapons') {
+                Object.keys(WEAPONS_DB).forEach(key => {
+                    const item = WEAPONS_DB[key];
+                    const isOwned = game.inventory.includes(key);
+                    const isEquipped = game.equipment.weapon === key;
+                    container.appendChild(Shop.createItemCard(key, item, isOwned, isEquipped, 'weapon'));
+                });
+            } else if (Shop.activeTab === 'armors') {
+                Object.keys(ARMORS_DB).forEach(key => {
+                    const item = ARMORS_DB[key];
+                    const isOwned = game.inventory.includes(key);
+                    const isEquipped = game.equipment.armor === key;
+                    container.appendChild(Shop.createItemCard(key, item, isOwned, isEquipped, 'armor'));
+                });
+            } else if (Shop.activeTab === 'consumables') {
+                // Potions
+                const potCard = document.createElement('div');
+                potCard.className = "glass-card p-3.5 flex items-center justify-between";
+                potCard.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="text-3xl bg-pink-900/30 p-2 rounded-xl">🧪</div>
+                        <div>
+                            <h3 class="font-bold text-sm text-white">Potion HP (50%)</h3>
+                            <p class="text-[11px] text-gray-400">Pulihkan 50% Max HP saat perang.</p>
+                        </div>
+                    </div>
+                    <button onclick="Shop.buyPotion()" class="btn-purple px-3 py-1.5 rounded-lg text-xs font-bold flex flex-col items-center">
+                        <span>Beli</span>
+                        <span class="text-[10px] text-yellow-300 font-normal">30🪙</span>
+                    </button>
+                `;
+                container.appendChild(potCard);
+            }
+        },
+        createItemCard: (key, item, isOwned, isEquipped, slotType) => {
+            const card = document.createElement('div');
+            card.className = `glass-card p-3.5 flex items-center justify-between border ${isEquipped ? 'border-purple-500 bg-purple-950/20' : 'border-gray-800'}`;
+            
+            let statsText = "";
+            if (item.atk) statsText += `+${item.atk} ATK `;
+            if (item.hp) statsText += `+${item.hp} HP `;
+            if (item.def) statsText += `+${item.def} DEF `;
+            if (item.crit) statsText += `+${item.crit}% Crit `;
+            if (item.lifesteal) statsText += `+${item.lifesteal}% Lifesteal `;
+
+            const currIcon = item.currency === 'coins' ? '🪙' : '💎';
+
+            let actionBtn = '';
+            if (isEquipped) {
+                actionBtn = `<span class="bg-purple-900/80 text-purple-200 border border-purple-500/50 px-3 py-1.5 rounded text-xs font-bold">Dipakai</span>`;
+            } else if (isOwned) {
+                actionBtn = `<button onclick="Shop.equipItem('${key}', '${slotType}')" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Pakai</button>`;
+            } else {
+                actionBtn = `<button onclick="Shop.buyItem('${key}', '${slotType}')" class="btn-purple px-3 py-1.5 rounded-lg text-xs font-bold flex flex-col items-center">
+                                <span>Beli</span>
+                                <span class="text-[10px] text-yellow-300 font-normal">${item.price}${currIcon}</span>
+                            </button>`;
+            }
+
+            card.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="text-3xl bg-purple-900/40 p-2 rounded-xl">${item.icon}</div>
+                    <div>
+                        <h3 class="font-bold text-sm text-white">${item.name}</h3>
+                        <div class="text-[10px] text-purple-300 font-semibold">${statsText}</div>
+                        <p class="text-[10px] text-gray-400 mt-0.5">${item.desc}</p>
+                    </div>
+                </div>
+                <div>${actionBtn}</div>
+            `;
+            return card;
+        },
+        buyItem: (key, slotType) => {
+            const db = slotType === 'weapon' ? WEAPONS_DB : ARMORS_DB;
+            const item = db[key];
+            
+            if (item.currency === 'coins' && game.player.coins < item.price) return Utils.toast("Koin tidak cukup!");
+            if (item.currency === 'diamonds' && game.player.diamonds < item.price) return Utils.toast("Diamond tidak cukup!");
+
+            if (item.currency === 'coins') Utils.addCoins(-item.price);
+            else Utils.addDiamonds(-item.price);
+
+            game.inventory.push(key);
+            game.equipment[slotType] = key; // Auto equip on buy
+            
+            Utils.toast(`Membeli & Memakai ${item.name}!`);
+            Shop.render();
+            UI.updateHeader();
+        },
+        equipItem: (key, slotType) => {
+            game.equipment[slotType] = key;
+            Utils.toast(`Memakai ${slotType === 'weapon' ? 'Senjata' : 'Armor'} baru!`);
+            Shop.render();
+        },
+        buyPotion: () => {
+            if (game.player.coins < 30) return Utils.toast("Koin tidak cukup!");
+            Utils.addCoins(-30);
+            game.player.potions++;
+            Utils.toast("Membeli 1x Potion HP!");
+            UI.updateHeader();
+            Shop.render();
+        }
+    };
+
+    // --- CASINO MINI GAMES ---
+    const Casino = {
+        openGame: (id) => {
+            document.getElementById('casino-menu').classList.add('hidden');
+            ['slots', 'blackjack', 'coinflip'].forEach(g => document.getElementById(`casino-${g}`).classList.add('hidden'));
+            document.getElementById(`casino-${id}`).classList.remove('hidden');
+        },
+        backToMenu: () => {
+            ['slots', 'blackjack', 'coinflip'].forEach(g => document.getElementById(`casino-${g}`).classList.add('hidden'));
+            document.getElementById('casino-menu').classList.remove('hidden');
+        },
+
+        // Slots Logic
+        playSlots: () => {
+            const betInput = document.getElementById('slots-bet-input');
+            const bet = parseInt(betInput.value);
+            const currency = document.getElementById('slots-currency').value;
+
+            if (isNaN(bet) || bet <= 0) return Utils.toast("Jumlah taruhan salah!");
+            if (currency === 'coins' && game.player.coins < bet) return Utils.toast("Koin tidak cukup!");
+            if (currency === 'diamonds' && game.player.diamonds < bet) return Utils.toast("Diamond tidak cukup!");
+
+            if (currency === 'coins') Utils.addCoins(-bet);
+            else Utils.addDiamonds(-bet);
+
+            const btn = document.getElementById('btn-spin-slots');
+            btn.disabled = true;
+
+            const symbols = ['🍒', '💎', '🔔', '🍋', '⭐', '7️⃣'];
+            const slotEls = [document.getElementById('slot-1'), document.getElementById('slot-2'), document.getElementById('slot-3')];
+
+            slotEls.forEach(s => s.parentElement.classList.add('animate-hit'));
+
+            setTimeout(() => {
+                slotEls.forEach(s => s.parentElement.classList.remove('animate-hit'));
+                const res = [
+                    symbols[Math.floor(Math.random() * symbols.length)],
+                    symbols[Math.floor(Math.random() * symbols.length)],
+                    symbols[Math.floor(Math.random() * symbols.length)]
+                ];
+
+                slotEls.forEach((s, i) => s.innerText = res[i]);
+
+                const unique = new Set(res).size;
+                if (unique === 1) { // 3 Match Jackpot
+                    const win = bet * 10;
+                    if (currency === 'coins') Utils.addCoins(win); else Utils.addDiamonds(win);
+                    Utils.toast(`🎉 JACKPOT! Menang ${win} ${currency === 'coins' ? '🪙' : '💎'}!`);
+                } else if (unique === 2) { // 2 Match
+                    const win = bet * 2;
+                    if (currency === 'coins') Utils.addCoins(win); else Utils.addDiamonds(win);
+                    Utils.toast(`Dapat 2 Sama! Menang ${win} ${currency === 'coins' ? '🪙' : '💎'}`);
+                } else {
+                    Utils.toast("Belum beruntung, coba lagi!");
+                }
+                btn.disabled = false;
+            }, 800);
+        },
+
+        // Coinflip Logic
+        playCoinflip: (choice) => {
+            const bet = parseInt(document.getElementById('coinflip-bet-input').value);
+            if (isNaN(bet) || bet <= 0 || game.player.coins < bet) return Utils.toast("Koin tidak cukup!");
+
+            Utils.addCoins(-bet);
+            const visual = document.getElementById('coin-visual');
+            visual.classList.add('animate-hit');
+
+            setTimeout(() => {
+                visual.classList.remove('animate-hit');
+                const winSide = Math.random() < 0.5 ? 'heads' : 'tails';
+                visual.innerText = winSide === 'heads' ? 'H' : 'T';
+
+                if (winSide === choice) {
+                    const win = bet * 2;
+                    Utils.addCoins(win);
+                    Utils.toast(`Tebakan Benar! Menang ${win}🪙`);
+                } else {
+                    Utils.toast("Tebakan Salah!");
+                }
+            }, 600);
+        }
+    };
+
+    // --- BLACKJACK SYSTEM ---
+    const Blackjack = {
+        deck: [],
+        playerHand: [],
+        dealerHand: [],
+        bet: 0,
+        suits: ['♠', '♥', '♦', '♣'],
+        values: ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'],
+
+        buildDeck: () => {
+            Blackjack.deck = [];
+            for (let s of Blackjack.suits) {
+                for (let v of Blackjack.values) {
+                    let w = parseInt(v);
+                    if (v === 'J' || v === 'Q' || v === 'K') w = 10;
+                    if (v === 'A') w = 11;
+                    Blackjack.deck.push({ suit: s, value: v, weight: w });
+                }
+            }
+            for (let i = Blackjack.deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [Blackjack.deck[i], Blackjack.deck[j]] = [Blackjack.deck[j], Blackjack.deck[i]];
+            }
+        },
+        draw: () => Blackjack.deck.pop(),
+        calcScore: (hand) => {
+            let score = 0, aces = 0;
+            for (let c of hand) {
+                score += c.weight;
+                if (c.value === 'A') aces++;
+            }
+            while (score > 21 && aces > 0) {
+                score -= 10; aces--;
+            }
+            return score;
+        },
+        renderCard: (card, hidden = false) => {
+            if (hidden) return `<div class="bg-purple-900 border border-purple-700 w-10 h-14 rounded flex items-center justify-center text-white">?</div>`;
+            const color = (card.suit === '♥' || card.suit === '♦') ? 'text-red-500' : 'text-gray-900';
+            return `<div class="bg-white border border-gray-300 w-10 h-14 rounded flex flex-col items-center justify-center ${color} font-bold shadow text-xs">
+                        <div>${card.value}</div>
+                        <div>${card.suit}</div>
+                    </div>`;
+        },
+        updateBoard: (hideDealer = true) => {
+            document.getElementById('bj-player-score').innerText = Blackjack.calcScore(Blackjack.playerHand);
+            document.getElementById('bj-player-cards').innerHTML = Blackjack.playerHand.map(c => Blackjack.renderCard(c)).join('');
+
+            if (hideDealer) {
+                document.getElementById('bj-dealer-score').innerText = "?";
+                let html = Blackjack.renderCard(Blackjack.dealerHand[0]) + Blackjack.renderCard(null, true);
+                document.getElementById('bj-dealer-cards').innerHTML = html;
+            } else {
+                document.getElementById('bj-dealer-score').innerText = Blackjack.calcScore(Blackjack.dealerHand);
+                document.getElementById('bj-dealer-cards').innerHTML = Blackjack.dealerHand.map(c => Blackjack.renderCard(c)).join('');
+            }
+        },
+        start: () => {
+            const bet = parseInt(document.getElementById('bj-bet-input').value);
+            if (isNaN(bet) || bet <= 0 || game.player.coins < bet) return Utils.toast("Koin tidak cukup!");
+
+            Blackjack.bet = bet;
+            Utils.addCoins(-bet);
+
+            document.getElementById('bj-bet-screen').classList.add('hidden');
+            document.getElementById('bj-play-screen').classList.remove('hidden');
+            document.getElementById('bj-actions').classList.remove('hidden');
+            document.getElementById('bj-result').classList.add('hidden');
+            document.getElementById('bj-play-again').classList.add('hidden');
+
+            Blackjack.buildDeck();
+            Blackjack.playerHand = [Blackjack.draw(), Blackjack.draw()];
+            Blackjack.dealerHand = [Blackjack.draw(), Blackjack.draw()];
+
+            Blackjack.updateBoard(true);
+
+            if (Blackjack.calcScore(Blackjack.playerHand) === 21) {
+                Blackjack.endGame(true, "Blackjack 21! Kamu Menang!");
+            }
+        },
+        hit: () => {
+            Blackjack.playerHand.push(Blackjack.draw());
+            Blackjack.updateBoard(true);
+            if (Blackjack.calcScore(Blackjack.playerHand) > 21) {
+                Blackjack.endGame(false, "Bust! Nilai Kartu Melebihi 21.");
+            }
+        },
+        doubleDown: () => {
+            if (game.player.coins < Blackjack.bet) return Utils.toast("Koin tidak cukup untuk Double!");
+            Utils.addCoins(-Blackjack.bet);
+            Blackjack.bet *= 2;
+            Blackjack.playerHand.push(Blackjack.draw());
+            Blackjack.updateBoard(true);
+            if (Blackjack.calcScore(Blackjack.playerHand) > 21) {
+                Blackjack.endGame(false, "Bust! Nilai Kartu Melebihi 21.");
+            } else {
+                Blackjack.stand();
+            }
+        },
+        stand: () => {
+            document.getElementById('bj-actions').classList.add('hidden');
+            Blackjack.updateBoard(false);
+
+            const dealerPlay = () => {
+                if (Blackjack.calcScore(Blackjack.dealerHand) < 17) {
+                    Blackjack.dealerHand.push(Blackjack.draw());
+                    Blackjack.updateBoard(false);
+                    setTimeout(dealerPlay, 600);
+                } else {
+                    Blackjack.resolve();
+                }
+            };
+            setTimeout(dealerPlay, 600);
+        },
+        resolve: () => {
+            const p = Blackjack.calcScore(Blackjack.playerHand);
+            const d = Blackjack.calcScore(Blackjack.dealerHand);
+
+            if (d > 21) Blackjack.endGame(true, "Dealer Bust! Kamu Menang!");
+            else if (p > d) Blackjack.endGame(true, "Kamu Menang!");
+            else if (p < d) Blackjack.endGame(false, "Dealer Menang!");
+            else Blackjack.endGame('tie', "Hasil Seri (Push)!");
+        },
+        endGame: (status, msg) => {
+            document.getElementById('bj-actions').classList.add('hidden');
+            Blackjack.updateBoard(false);
+
+            const res = document.getElementById('bj-result');
+            res.classList.remove('hidden');
+            res.innerText = msg;
+
+            if (status === true) {
+                Utils.addCoins(Blackjack.bet * 2);
+                res.className = "text-center text-sm font-bold py-2 text-green-400 animate-pop";
+            } else if (status === 'tie') {
+                Utils.addCoins(Blackjack.bet);
+                res.className = "text-center text-sm font-bold py-2 text-yellow-400 animate-pop";
+            } else {
+                res.className = "text-center text-sm font-bold py-2 text-red-500 animate-pop";
+            }
+            document.getElementById('bj-play-again').classList.remove('hidden');
+        },
+        resetScreen: () => {
+            document.getElementById('bj-play-screen').classList.add('hidden');
+            document.getElementById('bj-bet-screen').classList.remove('hidden');
+        }
+    };
+
+    // --- SETTINGS & SAVE EXPORT/IMPORT ---
+    const Settings = {
+        exportSaveTxt: () => {
+            const dataStr = JSON.stringify(game, null, 2);
+            const blob = new Blob([dataStr], { type: "text/plain;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `realm_save_${game.player.name.toLowerCase()}_lvl${game.player.level}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            Utils.toast("File Save .txt berhasil di-download!");
+        },
+        handleFileUpload: (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('import-text-area').value = e.target.result;
+            };
+            reader.readAsText(file);
+        },
+        importSaveText: () => {
+            const text = document.getElementById('import-text-area').value.trim();
+            if (!text) return Utils.toast("Masukkan kode save terlebih dahulu!");
+
+            try {
+                const parsed = JSON.parse(text);
+                if (parsed.player && parsed.farm) {
+                    game = { ...INITIAL_STATE, ...parsed };
+                    Utils.saveGame();
+                    UI.init();
+                    Utils.toast("Progress game berhasil di-restore!");
+                    document.getElementById('import-text-area').value = '';
+                } else {
+                    throw new Error("Invalid structure");
+                }
+            } catch (e) {
+                Utils.toast("Format data save tidak valid!");
+            }
+        },
+        resetGamePrompt: () => {
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+                <div class="glass-card p-5 w-full max-w-xs animate-pop text-center">
+                    <h3 class="font-bold text-sm text-red-400 mb-2">⚠️ Hapus Semua Progress?</h3>
+                    <p class="text-xs text-gray-400 mb-4">Aksi ini tidak bisa dibatalkan!</p>
+                    <div class="flex gap-2">
+                        <button onclick="Profile.closeModal()" class="flex-1 bg-gray-800 text-gray-300 py-2 rounded text-xs font-bold">Batal</button>
+                        <button onclick="Settings.executeReset()" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 rounded text-xs font-bold">Ya, Hapus</button>
+                    </div>
+                </div>
+            `;
+            container.classList.remove('hidden');
+        },
+        executeReset: () => {
+            localStorage.removeItem(SAVE_KEY);
+            location.reload();
+        }
+    };
+
+    // Boot Up
+    window.onload = UI.init;
+
+</script>
+</body>
+</html>
