@@ -10,1606 +10,1432 @@
             --primary: #935cd8;
             --primary-dark: #6b3ba7;
             --primary-light: #b388ef;
-            --bg-dark: #0f0f13;
-            --bg-panel: #181820;
-            --bg-card: #22222e;
-            --text-main: #f1f5f9;
+            --bg-dark: #09090b;
+            --bg-panel: #121217;
+            --bg-card: #1c1c24;
+            --text-main: #f8fafc;
         }
 
         body {
-            background-color: #050507;
+            background-color: var(--bg-dark);
             color: var(--text-main);
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
+            margin: 0; padding: 0; height: 100vh;
+            display: flex; overflow: hidden;
             touch-action: manipulation;
         }
 
-        /* 9:16 Responsive Mobile Viewport Container */
-        #game-container {
-            width: 100%;
-            max-width: 450px;
-            height: 100dvh;
-            background-color: var(--bg-dark);
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 0 35px rgba(147, 92, 216, 0.25);
-            border-left: 1px solid rgba(147, 92, 216, 0.2);
-            border-right: 1px solid rgba(147, 92, 216, 0.2);
-            overflow: hidden;
-        }
+        /* Responsive Layout Structure */
+        #app { display: flex; width: 100%; height: 100%; flex-direction: column; }
+        @media (min-width: 768px) { #app { flex-direction: row; } }
 
-        /* Scrollbar styling */
-        ::-webkit-scrollbar { width: 4px; }
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: var(--bg-dark); }
         ::-webkit-scrollbar-thumb { background: var(--primary-dark); border-radius: 10px; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* UI Panel & Glassmorphism */
-        .glass-panel {
-            background: rgba(24, 24, 32, 0.85);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(147, 92, 216, 0.25);
-        }
+        .glass-panel { background: rgba(18, 18, 23, 0.9); backdrop-filter: blur(16px); border-color: rgba(147, 92, 216, 0.2); }
+        .glass-card { background: var(--bg-card); border-radius: 12px; }
+        
+        .btn-purple { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 4px 12px rgba(147,92,216,0.25); transition: all 0.15s; }
+        .btn-purple:active:not(:disabled) { transform: scale(0.96); filter: brightness(0.9); }
+        .btn-purple:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); box-shadow: none; transform: none; }
 
-        .glass-card {
-            background: var(--bg-card);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-        }
-
-        .btn-purple {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            box-shadow: 0 4px 12px rgba(147, 92, 216, 0.3);
-            transition: all 0.15s ease;
-        }
-        .btn-purple:active { transform: scale(0.96); filter: brightness(0.9); }
-        .btn-purple:disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); transform: none; }
+        .btn-action { transition: transform 0.1s, filter 0.1s; }
+        .btn-action:active:not(:disabled) { transform: scale(0.95); filter: brightness(0.9); }
 
         /* Animations */
-        @keyframes pop {
-            0% { transform: scale(0.92); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
+        @keyframes pop { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         .animate-pop { animation: pop 0.2s ease-out forwards; }
+        @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-50px); opacity: 0; } }
+        .floating-text { position: absolute; animation: float-up 1s ease-out forwards; font-weight: 900; pointer-events: none; z-index: 60; text-shadow: 0 2px 5px #000; font-size: 1.5rem; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px) rotate(-2deg); } 40% { transform: translateX(6px) rotate(2deg); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
+        .animate-hit { animation: shake 0.35s ease-in-out; }
 
-        @keyframes float-up {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-35px); opacity: 0; }
-        }
-        .floating-text {
-            position: absolute;
-            animation: float-up 0.9s ease-out forwards;
-            font-weight: 800;
-            pointer-events: none;
-            z-index: 60;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-        }
+        /* Tier Colors */
+        .tier-common { border: 2px solid #6b7280; box-shadow: 0 0 10px rgba(107,114,128,0.2); }
+        .tier-uncommon { border: 2px solid #3b82f6; box-shadow: 0 0 10px rgba(59,130,246,0.3); }
+        .tier-rare { border: 2px solid #d1d5db; box-shadow: 0 0 10px rgba(209,213,219,0.4); }
+        .tier-special { border: 2px solid #06b6d4; box-shadow: 0 0 15px rgba(6,182,212,0.5); }
+        .tier-mythical { border: 2px solid #a855f7; box-shadow: 0 0 15px rgba(168,85,247,0.5); }
+        .tier-legendary { border: 2px solid #ef4444; box-shadow: 0 0 25px rgba(239,68,68,0.6); background: rgba(239,68,68,0.05); }
 
-        @keyframes hit-shake {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-8px) rotate(-2deg); }
-            40% { transform: translateX(8px) rotate(2deg); }
-            60% { transform: translateX(-4px); }
-            80% { transform: translateX(4px); }
-        }
-        .animate-hit { animation: hit-shake 0.35s ease-in-out; }
+        /* PvP Stars */
+        .star-filled { color: #fbbf24; text-shadow: 0 0 5px rgba(251,191,36,0.5); }
+        .star-empty { color: #374151; }
 
-        /* Farm Plot Grid & Animation */
+        /* Farm PvZ Style */
         .farm-plot {
-            aspect-ratio: 1;
-            background: #2a1e17;
-            border: 2px solid #3d2b20;
-            border-radius: 12px;
-            position: relative;
-            cursor: pointer;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.2rem;
-            user-select: none;
-            transition: transform 0.1s, border-color 0.2s;
+            aspect-ratio: 1; background: #2f2219; border: 3px solid #4a3627; border-radius: 12px;
+            position: relative; cursor: pointer; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            user-select: none; transition: transform 0.1s; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
         }
-        .farm-plot:active { transform: scale(0.95); }
-        .farm-plot.locked {
-            background: #181820;
-            border: 2px dashed #333344;
-            color: #555566;
-            font-size: 1.2rem;
-        }
-        .farm-plot.growing::after {
-            content: '';
-            position: absolute;
-            bottom: 0; left: 0; height: 100%;
-            background: rgba(147, 92, 216, 0.25);
-            width: var(--progress, 0%);
-            transition: width 0.2s linear;
-        }
-        .farm-plot.ready {
-            background: #23381a;
-            border-color: #4ade80;
-            box-shadow: 0 0 10px rgba(74, 222, 128, 0.3);
-        }
+        .farm-plot:active { transform: scale(0.96); }
+        .farm-plot.locked { background: #1a1a24; border: 2px dashed #3f3f5a; color: #555566; }
+        
+        .farm-icon { font-size: 2.5rem; z-index: 10; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); }
+        .farm-state-icon { position: absolute; top: 4px; right: 4px; font-size: 1rem; background: rgba(0,0,0,0.6); border-radius: 50%; padding: 2px; z-index: 20;}
+        .farm-progress-bar { position: absolute; bottom: 0; left: 0; height: 100%; width: 100%; opacity: 0.2; transform-origin: bottom; transform: scaleY(0); transition: transform 0.2s linear; }
 
-        .tab-content { display: none; height: 100%; overflow-y: auto; padding: 1rem; padding-bottom: 5.5rem; }
+        /* Plot States */
+        .plot-empty { background: #2f2219; }
+        .plot-needs-water { background: #3a2b1f; border-color: #634732; }
+        .plot-growing-1 .farm-progress-bar { background: #3b82f6; }
+        .plot-needs-fert { background: #363622; border-color: #595931; }
+        .plot-growing-2 .farm-progress-bar { background: #a855f7; }
+        .plot-ready { background: #2c421e; border-color: #4ade80; box-shadow: 0 0 15px rgba(74, 222, 128, 0.4), inset 0 0 20px rgba(0,0,0,0.5); }
+
+        .tab-content { display: none; height: 100%; overflow-y: auto; padding: 1rem; padding-bottom: 2rem; }
         .tab-content.active { display: block; animation: pop 0.2s ease-out; }
 
-        /* Toast Container */
-        #toast-container { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; flex-direction: column; gap: 6px; pointer-events: none; width: 85%; max-width: 360px; }
-        .toast { background: rgba(147, 92, 216, 0.95); color: white; padding: 10px 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; text-center: center; box-shadow: 0 8px 16px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); }
-
-        /* Modal Overlay */
-        .modal-overlay {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 80; display: flex; align-items: center; justify-content: center; padding: 1rem;
-        }
+        .modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+        
+        #toast-container { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 200; display: flex; flex-direction: column; gap: 8px; pointer-events: none; width: 90%; max-width: 400px; align-items: center;}
+        .toast { background: rgba(147, 92, 216, 0.95); color: white; padding: 12px 20px; border-radius: 12px; font-size: 0.9rem; font-weight: 700; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); text-align: center; }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    
-    <!-- Top Fixed Header -->
-    <header class="glass-panel h-16 w-full flex items-center justify-between px-3 z-40 relative flex-shrink-0">
-        <!-- Player Info Trigger -->
-        <div class="flex items-center gap-2 cursor-pointer" onclick="Nav.switchTab('profile')">
-            <div id="header-avatar" class="bg-purple-900/60 rounded-full h-10 w-10 flex items-center justify-center border-2 border-purple-400 text-xl shadow-inner">
-                🧙‍♂️
+<div id="app">
+    <!-- Desktop Sidebar (Hidden on Mobile) -->
+    <aside class="hidden md:flex flex-col w-64 bg-panel border-r border-purple-900/30 flex-shrink-0 relative z-40 shadow-2xl">
+        <div class="p-5 flex flex-col items-center border-b border-gray-800">
+            <div class="relative w-20 h-20 rounded-full bg-purple-950 border-2 border-purple-500 flex items-center justify-center text-4xl overflow-hidden mb-3 shadow-lg group cursor-pointer" onclick="Nav.switchTab('profile')">
+                <img id="sidebar-avatar-img" src="" class="w-full h-full object-cover hidden">
+                <span id="sidebar-avatar-emoji">🧙‍♂️</span>
             </div>
-            <div class="flex flex-col">
-                <div class="flex items-center gap-1">
-                    <span id="header-name" class="font-bold text-xs text-purple-200 truncate max-w-[80px]">Hero</span>
-                    <span class="text-[10px] bg-purple-900/80 px-1.5 py-0.5 rounded text-purple-300 font-bold">Lvl <span id="header-level">1</span></span>
-                </div>
-                <!-- XP Bar -->
-                <div class="w-20 h-1.5 bg-gray-800 rounded-full overflow-hidden mt-1 border border-gray-700">
-                    <div id="header-xp-bar" class="h-full bg-purple-400 transition-all duration-300" style="width: 0%;"></div>
-                </div>
+            <h2 id="sidebar-name" class="font-bold text-lg text-purple-200 truncate w-full text-center">Hero</h2>
+            <div class="text-xs bg-purple-900/60 px-2 py-1 rounded text-purple-300 font-bold mt-1">Lvl <span id="sidebar-lvl">1</span> | <span id="sidebar-rank">Bronze I</span></div>
+            <div class="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden mt-3">
+                <div id="sidebar-xp" class="h-full bg-purple-500" style="width: 0%;"></div>
             </div>
         </div>
+        <nav class="flex-1 overflow-y-auto p-3 flex flex-col gap-2 mt-2">
+            <button class="nav-btn w-full text-left px-4 py-3 rounded-xl font-bold text-gray-400 hover:bg-gray-800 hover:text-purple-300 transition-colors flex items-center gap-3" onclick="Nav.switchTab('farm', this)"><span class="text-xl">🌾</span> Kebun</button>
+            <button class="nav-btn w-full text-left px-4 py-3 rounded-xl font-bold text-gray-400 hover:bg-gray-800 hover:text-purple-300 transition-colors flex items-center gap-3" onclick="Nav.switchTab('combat', this)"><span class="text-xl">⚔️</span> Petualangan</button>
+            <button class="nav-btn w-full text-left px-4 py-3 rounded-xl font-bold text-gray-400 hover:bg-gray-800 hover:text-purple-300 transition-colors flex items-center gap-3" onclick="Nav.switchTab('ranked', this)"><span class="text-xl">🏆</span> Ranked (PVP)</button>
+            <button class="nav-btn w-full text-left px-4 py-3 rounded-xl font-bold text-gray-400 hover:bg-gray-800 hover:text-purple-300 transition-colors flex items-center gap-3" onclick="Nav.switchTab('shop', this)"><span class="text-xl">🛒</span> Toko</button>
+            <button class="nav-btn w-full text-left px-4 py-3 rounded-xl font-bold text-gray-400 hover:bg-gray-800 hover:text-purple-300 transition-colors flex items-center gap-3" onclick="Nav.switchTab('forge', this)"><span class="text-xl">⚒️</span> Blacksmith</button>
+            <button class="nav-btn w-full text-left px-4 py-3 rounded-xl font-bold text-gray-400 hover:bg-gray-800 hover:text-purple-300 transition-colors flex items-center gap-3" onclick="Nav.switchTab('casino', this)"><span class="text-xl">🎲</span> Kasino</button>
+            <hr class="border-gray-800 my-1">
+            <button class="nav-btn w-full text-left px-4 py-3 rounded-xl font-bold text-gray-400 hover:bg-gray-800 hover:text-purple-300 transition-colors flex items-center gap-3" onclick="Nav.switchTab('profile', this)"><span class="text-xl">👤</span> Profil</button>
+            <button class="nav-btn w-full text-left px-4 py-3 rounded-xl font-bold text-gray-400 hover:bg-gray-800 hover:text-purple-300 transition-colors flex items-center gap-3" onclick="Nav.switchTab('settings', this)"><span class="text-xl">⚙️</span> Pengaturan</button>
+        </nav>
+    </aside>
 
-        <!-- Currencies -->
-        <div class="flex items-center gap-2">
-            <!-- Coins -->
-            <div class="flex items-center gap-1 text-yellow-400 text-xs font-bold bg-gray-900/90 px-2.5 py-1 rounded-full border border-yellow-500/30">
-                <span>🪙</span><span id="header-coins">0</span>
-            </div>
-            <!-- Diamonds -->
-            <div class="flex items-center gap-1 text-cyan-300 text-xs font-bold bg-gray-900/90 px-2.5 py-1 rounded-full border border-cyan-500/30">
-                <span>💎</span><span id="header-diamonds">0</span>
-            </div>
-            <!-- Settings -->
-            <button onclick="Nav.switchTab('settings')" class="text-gray-400 hover:text-purple-400 text-lg p-1 transition-colors">⚙️</button>
-        </div>
-    </header>
-
-    <!-- Toast Container -->
-    <div id="toast-container"></div>
-
-    <!-- Main Content Tab Area -->
-    <main class="flex-1 relative overflow-hidden">
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col relative w-full h-full bg-dark">
         
-        <!-- ================= TAB: PROFIL ================= -->
-        <div id="tab-profile" class="tab-content">
-            <h2 class="text-xl font-bold text-purple-400 mb-3 flex items-center gap-2">👤 Profil Player</h2>
+        <!-- Top Header Panel -->
+        <header class="glass-panel h-16 flex-shrink-0 px-4 flex items-center justify-between z-30 w-full relative border-b border-purple-900/30">
+            <!-- Mobile Profile Trigger -->
+            <div class="md:hidden flex items-center gap-2 cursor-pointer w-1/2" onclick="Nav.switchTab('profile')">
+                <div class="relative w-10 h-10 rounded-full bg-purple-950 border-2 border-purple-500 flex items-center justify-center overflow-hidden shrink-0">
+                    <img id="mobile-avatar-img" src="" class="w-full h-full object-cover hidden">
+                    <span id="mobile-avatar-emoji" class="text-xl">🧙‍♂️</span>
+                </div>
+                <div class="flex flex-col min-w-0">
+                    <span id="mobile-name" class="font-bold text-sm text-purple-200 truncate">Hero</span>
+                    <span class="text-[10px] text-gray-400 truncate">Lvl <span id="mobile-lvl">1</span></span>
+                </div>
+            </div>
+            <div class="hidden md:block w-1/3 font-black text-xl text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-200 tracking-wide">
+                Realm of Cultivation
+            </div>
+
+            <!-- Currencies -->
+            <div class="flex items-center gap-2 justify-end w-1/2 md:w-2/3">
+                <div class="flex items-center gap-1 text-yellow-400 text-xs sm:text-sm font-bold bg-gray-900/90 px-2 sm:px-3 py-1.5 rounded-full border border-yellow-500/30 shadow-inner shrink-0">
+                    <span>🪙</span><span id="top-coins">0</span>
+                </div>
+                <div class="flex items-center gap-1 text-cyan-300 text-xs sm:text-sm font-bold bg-gray-900/90 px-2 sm:px-3 py-1.5 rounded-full border border-cyan-500/30 shadow-inner shrink-0">
+                    <span>💎</span><span id="top-diamonds">0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Toasts -->
+        <div id="toast-container"></div>
+
+        <!-- Tab Views Container -->
+        <main class="flex-1 relative overflow-hidden bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPjxyZWN0IHdpZHRoPSI4IiBoZWlnaHQ9IjgiIGZpbGw9IiMwOTA5MGIiLz48Y2lyY2xlIGN4PSI0IiBjeT0iNCIgcj0iMSIgZmlsbD0iIzFmMWYyZSIvPjwvc3ZnPg==')]" id="main-view">
             
-            <!-- Character Card -->
-            <div class="glass-card p-4 mb-4 flex items-center justify-between border-purple-500/30">
-                <div class="flex items-center gap-3">
-                    <div id="profile-avatar-display" class="text-4xl bg-purple-950 p-3 rounded-2xl border border-purple-500/40">🧙‍♂️</div>
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h3 id="profile-name-display" class="font-bold text-lg text-white">Hero</h3>
-                            <button onclick="Profile.openEditModal()" class="text-xs text-purple-400 underline">Edit</button>
-                        </div>
-                        <p class="text-xs text-gray-400">Level <span id="profile-level">1</span> Wanderer</p>
+            <!-- TAB: PROFIL -->
+            <div id="tab-profile" class="tab-content">
+                <div class="max-w-3xl mx-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-purple-400 flex items-center gap-2">👤 Profil Karakter</h2>
                     </div>
-                </div>
-                <button onclick="Profile.openAvatarModal()" class="text-xs bg-purple-900/50 text-purple-300 px-3 py-1.5 rounded-lg border border-purple-500/40">Ganti Avatar</button>
-            </div>
-
-            <!-- Detailed Stats Grid -->
-            <div class="glass-card p-4 mb-4">
-                <h3 class="font-bold text-sm text-purple-300 mb-3 border-b border-gray-800 pb-2">⚔️ Stat Karakter</h3>
-                <div class="grid grid-cols-2 gap-3 text-xs">
-                    <div class="flex justify-between bg-gray-900/50 p-2 rounded border border-gray-800">
-                        <span class="text-gray-400">Max HP:</span>
-                        <span id="stat-hp" class="font-bold text-green-400">100</span>
-                    </div>
-                    <div class="flex justify-between bg-gray-900/50 p-2 rounded border border-gray-800">
-                        <span class="text-gray-400">Attack (ATK):</span>
-                        <span id="stat-atk" class="font-bold text-red-400">10</span>
-                    </div>
-                    <div class="flex justify-between bg-gray-900/50 p-2 rounded border border-gray-800">
-                        <span class="text-gray-400">Defense (DEF):</span>
-                        <span id="stat-def" class="font-bold text-blue-400">0</span>
-                    </div>
-                    <div class="flex justify-between bg-gray-900/50 p-2 rounded border border-gray-800">
-                        <span class="text-gray-400">Crit Rate:</span>
-                        <span id="stat-crit" class="font-bold text-yellow-400">5%</span>
-                    </div>
-                    <div class="flex justify-between bg-gray-900/50 p-2 rounded border border-gray-800">
-                        <span class="text-gray-400">Lifesteal:</span>
-                        <span id="stat-lifesteal" class="font-bold text-purple-400">0%</span>
-                    </div>
-                    <div class="flex justify-between bg-gray-900/50 p-2 rounded border border-gray-800">
-                        <span class="text-gray-400">Potion HP:</span>
-                        <span id="stat-potions" class="font-bold text-pink-400">3x</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Lifetime Progress Stats -->
-            <div class="glass-card p-4">
-                <h3 class="font-bold text-sm text-purple-300 mb-3 border-b border-gray-800 pb-2">📊 Catatan Rekam Jejak</h3>
-                <div class="grid grid-cols-2 gap-3 text-xs">
-                    <div class="bg-gray-900/50 p-2.5 rounded border border-gray-800 text-center">
-                        <div id="stat-battles" class="text-lg font-extrabold text-purple-300">0</div>
-                        <div class="text-[10px] text-gray-400 uppercase tracking-wider">Menang Perang</div>
-                    </div>
-                    <div class="bg-gray-900/50 p-2.5 rounded border border-gray-800 text-center">
-                        <div id="stat-crops" class="text-lg font-extrabold text-green-400">0</div>
-                        <div class="text-[10px] text-gray-400 uppercase tracking-wider">Hasil Panen</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ================= TAB: LADANG (FARM) ================= -->
-        <div id="tab-farm" class="tab-content active">
-            <div class="flex justify-between items-center mb-3">
-                <h2 class="text-xl font-bold text-purple-400 flex items-center gap-1">🌾 Ladang & Pertanian</h2>
-                <button onclick="Farm.openExpandModal()" class="btn-purple text-xs px-3 py-1.5 rounded-lg flex items-center gap-1 font-bold">
-                    ➕ Perluas Lahan
-                </button>
-            </div>
-
-            <!-- Seed Selector Selector Bar -->
-            <div class="glass-card p-2.5 mb-4">
-                <div class="text-xs text-gray-400 mb-2 font-semibold">Pilih Bibit Ditanam:</div>
-                <div class="flex gap-2 overflow-x-auto pb-1" id="seed-selector">
-                    <!-- Dynamic seed buttons -->
-                </div>
-            </div>
-
-            <!-- Farm Grid (3x4 = 12 Max Plots) -->
-            <div id="farm-grid" class="grid grid-cols-3 gap-3 mb-4">
-                <!-- Plots populated by JS -->
-            </div>
-        </div>
-
-        <!-- ================= TAB: PERANG (COMBAT & DUNGEONS) ================= -->
-        <div id="tab-combat" class="tab-content">
-            <div id="combat-select-screen">
-                <h2 class="text-xl font-bold text-purple-400 mb-2">⚔️ Pilih Wilayah Dungeoon</h2>
-                <p class="text-xs text-gray-400 mb-4">Kalahkan monster untuk mendapatkan XP, Koin, dan Diamond!</p>
-
-                <div class="flex flex-col gap-3" id="dungeon-list">
-                    <!-- Dungeon stages populated by JS -->
-                </div>
-            </div>
-
-            <!-- Active Battle View -->
-            <div id="combat-battle-screen" class="hidden flex flex-col gap-4">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs bg-purple-900/80 px-2.5 py-1 rounded text-purple-300 font-bold" id="battle-stage-title">Dungeon</span>
-                    <button onclick="Combat.flee()" class="text-xs text-gray-400 hover:text-red-400">🏃‍♂️ Kabur</button>
-                </div>
-
-                <!-- Enemy Box -->
-                <div class="glass-card p-4 flex flex-col items-center relative border-red-500/30" id="enemy-box">
-                    <span id="enemy-name" class="font-bold text-sm text-red-400 mb-1">Slime</span>
-                    <div id="enemy-sprite" class="text-6xl my-2">🧌</div>
-                    <div class="w-full bg-gray-900 rounded-full h-3.5 relative overflow-hidden border border-gray-700">
-                        <div id="enemy-hp-bar" class="h-full bg-red-500 transition-all duration-200" style="width: 100%;"></div>
-                        <span id="enemy-hp-text" class="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white">50/50</span>
-                    </div>
-                </div>
-
-                <!-- Divider -->
-                <div class="text-center font-black text-gray-600 text-xs tracking-widest">VS</div>
-
-                <!-- Player Box -->
-                <div class="glass-card p-4 flex flex-col items-center relative border-purple-500/30" id="player-box">
-                    <div class="w-full flex justify-between items-center mb-1">
-                        <span id="battle-player-name" class="font-bold text-sm text-purple-300">Hero</span>
-                        <span class="text-[10px] text-gray-400">⚔️ <span id="battle-player-atk">10</span></span>
-                    </div>
-                    <div class="w-full bg-gray-900 rounded-full h-3.5 relative overflow-hidden border border-gray-700 mb-2">
-                        <div id="player-hp-bar" class="h-full bg-green-500 transition-all duration-200" style="width: 100%;"></div>
-                        <span id="player-hp-text" class="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white">100/100</span>
-                    </div>
-                </div>
-
-                <!-- Actions Grid -->
-                <div class="grid grid-cols-3 gap-2 mt-1">
-                    <button onclick="Combat.playerAttack()" class="btn-purple py-3 rounded-xl font-bold text-sm flex flex-col items-center">
-                        <span>⚔️ Attack</span>
-                    </button>
-                    <button onclick="Combat.playerSkill()" class="bg-amber-600 hover:bg-amber-500 text-white py-3 rounded-xl font-bold text-sm flex flex-col items-center shadow-lg transition-transform active:scale-95">
-                        <span>✨ Skill</span>
-                        <span class="text-[9px] font-normal opacity-80">2x Dmg (Crit)</span>
-                    </button>
-                    <button onclick="Combat.usePotion()" class="bg-pink-700 hover:bg-pink-600 text-white py-3 rounded-xl font-bold text-sm flex flex-col items-center shadow-lg transition-transform active:scale-95">
-                        <span>🧪 Heal</span>
-                        <span class="text-[9px] font-normal opacity-80" id="potion-btn-count">3x Left</span>
-                    </button>
-                </div>
-
-                <!-- Battle Log Box -->
-                <div id="battle-log" class="glass-card p-2.5 h-20 overflow-y-auto text-[11px] text-gray-300 flex flex-col gap-1 border-gray-800">
-                    <p class="text-purple-400 italic">Pertarungan dimulai!</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- ================= TAB: TOKO (SHOP) ================= -->
-        <div id="tab-shop" class="tab-content">
-            <h2 class="text-xl font-bold text-purple-400 mb-2">🛒 Toko Equipment & Potions</h2>
-            
-            <!-- Shop Subtabs -->
-            <div class="flex gap-2 mb-3">
-                <button id="shop-tab-weapons" onclick="Shop.switchCategory('weapons')" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-purple-900 text-white border border-purple-500/50">Senjata</button>
-                <button id="shop-tab-armors" onclick="Shop.switchCategory('armors')" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-gray-800 text-gray-400 border border-gray-700">Armor</button>
-                <button id="shop-tab-consumables" onclick="Shop.switchCategory('consumables')" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-gray-800 text-gray-400 border border-gray-700">Lainnya</button>
-            </div>
-
-            <div id="shop-items-container" class="flex flex-col gap-3">
-                <!-- Items populated by JS -->
-            </div>
-        </div>
-
-        <!-- ================= TAB: KASINO (MINI GAMES) ================= -->
-        <div id="tab-casino" class="tab-content">
-            <div id="casino-menu">
-                <h2 class="text-xl font-bold text-purple-400 mb-1">🎲 Arena Mini Games</h2>
-                <p class="text-xs text-gray-400 mb-4">Uji keberuntunganmu untuk melipatgandakan Koin & Diamond!</p>
-                
-                <div class="flex flex-col gap-3">
-                    <button onclick="Casino.openGame('slots')" class="glass-card p-3.5 flex items-center gap-3 hover:border-purple-500/50 transition-colors text-left">
-                        <div class="text-3xl bg-purple-900/40 p-2 rounded-xl">🎰</div>
-                        <div>
-                            <h3 class="font-bold text-sm text-white">Slot Machine</h3>
-                            <p class="text-[11px] text-gray-400">Putar slot & dapatkan perkalian jackpot!</p>
-                        </div>
-                    </button>
-                    <button onclick="Casino.openGame('blackjack')" class="glass-card p-3.5 flex items-center gap-3 hover:border-purple-500/50 transition-colors text-left">
-                        <div class="text-3xl bg-purple-900/40 p-2 rounded-xl">🃏</div>
-                        <div>
-                            <h3 class="font-bold text-sm text-white">Blackjack 21</h3>
-                            <p class="text-[11px] text-gray-400">Kalahkan kartu dealer tanpa melebihi angka 21.</p>
-                        </div>
-                    </button>
-                    <button onclick="Casino.openGame('coinflip')" class="glass-card p-3.5 flex items-center gap-3 hover:border-purple-500/50 transition-colors text-left">
-                        <div class="text-3xl bg-purple-900/40 p-2 rounded-xl">🪙</div>
-                        <div>
-                            <h3 class="font-bold text-sm text-white">Coinflip</h3>
-                            <p class="text-[11px] text-gray-400">Pilih Gambar/Angka dengan peluang 50/50.</p>
-                        </div>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Slots Game View -->
-            <div id="casino-slots" class="hidden">
-                <button onclick="Casino.backToMenu()" class="text-xs text-purple-400 mb-3 flex items-center gap-1">← Kembali ke Kasino</button>
-                <h2 class="text-lg font-bold text-center mb-3">🎰 Slot Machine</h2>
-                
-                <div class="glass-card p-4 flex flex-col items-center">
-                    <div class="flex gap-2 mb-4 bg-gray-950 p-4 rounded-xl border border-gray-800 w-full justify-center">
-                        <div class="w-16 h-16 bg-gray-900 rounded-lg flex items-center justify-center text-3xl border border-gray-700 overflow-hidden shadow-inner"><span id="slot-1">🍒</span></div>
-                        <div class="w-16 h-16 bg-gray-900 rounded-lg flex items-center justify-center text-3xl border border-gray-700 overflow-hidden shadow-inner"><span id="slot-2">💎</span></div>
-                        <div class="w-16 h-16 bg-gray-900 rounded-lg flex items-center justify-center text-3xl border border-gray-700 overflow-hidden shadow-inner"><span id="slot-3">🔔</span></div>
-                    </div>
-
-                    <div class="w-full flex gap-2 mb-3">
-                        <div class="flex-1">
-                            <label class="text-[10px] text-gray-400">Taruhan:</label>
-                            <input type="number" id="slots-bet-input" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-xs text-white outline-none focus:border-purple-500" value="20" min="1">
-                        </div>
-                        <div class="flex-1">
-                            <label class="text-[10px] text-gray-400">Mata Uang:</label>
-                            <select id="slots-currency" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-xs text-white outline-none">
-                                <option value="coins">🪙 Koin</option>
-                                <option value="diamonds">💎 Diamond</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <button onclick="Casino.playSlots()" id="btn-spin-slots" class="w-full btn-purple py-3 rounded-lg font-bold text-sm">SPIN 🎰</button>
-                    <p class="text-[10px] text-gray-400 mt-3 text-center">Hasil: 2 Sama = 2x | 3 Sama = 10x Jackpot!</p>
-                </div>
-            </div>
-
-            <!-- Blackjack Game View -->
-            <div id="casino-blackjack" class="hidden">
-                <button onclick="Casino.backToMenu()" class="text-xs text-purple-400 mb-2 flex items-center gap-1">← Kembali ke Kasino</button>
-                <h2 class="text-lg font-bold mb-3">🃏 Blackjack 21</h2>
-
-                <div id="bj-bet-screen" class="glass-card p-4">
-                    <label class="text-xs text-gray-400 mb-1 block">Jumlah Taruhan (Koin):</label>
-                    <input type="number" id="bj-bet-input" class="w-full bg-gray-900 border border-gray-700 rounded p-2.5 text-xs text-white mb-3" value="50" min="10">
-                    <button onclick="Blackjack.start()" class="w-full btn-purple py-2.5 rounded-lg font-bold text-xs">MAIN (DEAL)</button>
-                </div>
-
-                <div id="bj-play-screen" class="hidden flex flex-col gap-3">
-                    <!-- Dealer Card Area -->
-                    <div class="glass-card p-3">
-                        <div class="flex justify-between text-xs text-gray-400 mb-2">
-                            <span>Dealer</span>
-                            <span id="bj-dealer-score">?</span>
-                        </div>
-                        <div id="bj-dealer-cards" class="flex gap-2 min-h-[60px]"></div>
-                    </div>
-
-                    <!-- Player Card Area -->
-                    <div class="glass-card p-3 border-purple-500/40">
-                        <div class="flex justify-between text-xs text-purple-300 font-bold mb-2">
-                            <span>Kartu Kamu</span>
-                            <span id="bj-player-score">0</span>
-                        </div>
-                        <div id="bj-player-cards" class="flex gap-2 min-h-[60px]"></div>
-                    </div>
-
-                    <!-- Actions -->
-                    <div id="bj-actions" class="grid grid-cols-3 gap-2">
-                        <button onclick="Blackjack.hit()" class="bg-blue-600 hover:bg-blue-500 py-2.5 rounded text-xs font-bold text-white">HIT (+1)</button>
-                        <button onclick="Blackjack.stand()" class="bg-red-600 hover:bg-red-500 py-2.5 rounded text-xs font-bold text-white">STAND</button>
-                        <button onclick="Blackjack.doubleDown()" class="bg-amber-600 hover:bg-amber-500 py-2.5 rounded text-xs font-bold text-white">DOUBLE</button>
-                    </div>
-
-                    <div id="bj-result" class="hidden text-center text-sm font-bold py-2"></div>
-                    <button id="bj-play-again" onclick="Blackjack.resetScreen()" class="hidden w-full btn-purple py-2.5 rounded-lg font-bold text-xs">MAIN LAGI</button>
-                </div>
-            </div>
-
-            <!-- Coinflip Game View -->
-            <div id="casino-coinflip" class="hidden">
-                <button onclick="Casino.backToMenu()" class="text-xs text-purple-400 mb-3 flex items-center gap-1">← Kembali ke Kasino</button>
-                <h2 class="text-lg font-bold text-center mb-3">🪙 Coinflip</h2>
-
-                <div class="glass-card p-4 flex flex-col items-center">
-                    <div id="coin-visual" class="w-20 h-20 bg-yellow-500 rounded-full flex items-center justify-center text-3xl font-bold text-yellow-950 border-4 border-yellow-600 mb-4 shadow-lg">?</div>
-
-                    <div class="w-full mb-3">
-                        <label class="text-[10px] text-gray-400">Taruhan (Koin):</label>
-                        <input type="number" id="coinflip-bet-input" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-xs text-white" value="25" min="1">
-                    </div>
-
-                    <div class="flex gap-3 w-full">
-                        <button onclick="Casino.playCoinflip('heads')" class="flex-1 btn-purple py-2.5 rounded-lg font-bold text-xs">HEADS (Gambar)</button>
-                        <button onclick="Casino.playCoinflip('tails')" class="flex-1 btn-purple py-2.5 rounded-lg font-bold text-xs">TAILS (Angka)</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ================= TAB: PENGATURAN (SETTINGS & SAVE) ================= -->
-        <div id="tab-settings" class="tab-content">
-            <h2 class="text-xl font-bold text-purple-400 mb-3">⚙️ Pengaturan Data Save</h2>
-
-            <div class="flex flex-col gap-4">
-                <!-- Export File TXT -->
-                <div class="glass-card p-4">
-                    <h3 class="font-bold text-xs text-purple-300 mb-1">📥 Export Save Game (.txt)</h3>
-                    <p class="text-[11px] text-gray-400 mb-3">Simpan progress gamemu ke dalam file .txt terpisah agar aman!</p>
-                    <button onclick="Settings.exportSaveTxt()" class="w-full btn-purple py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2">
-                        📄 Download Save File (.txt)
-                    </button>
-                </div>
-
-                <!-- Import File TXT or String -->
-                <div class="glass-card p-4">
-                    <h3 class="font-bold text-xs text-purple-300 mb-1">📤 Import Save Game</h3>
-                    <p class="text-[11px] text-gray-400 mb-2">Upload file .txt atau paste teks kode save di bawah:</p>
                     
-                    <input type="file" id="import-file-input" accept=".txt,.json" onchange="Settings.handleFileUpload(event)" class="text-xs text-gray-400 mb-2 w-full">
-                    
-                    <textarea id="import-text-area" rows="3" class="w-full bg-gray-950 border border-gray-700 rounded p-2 text-[10px] text-gray-300 outline-none resize-none mb-2" placeholder="Atau paste teks save JSON di sini..."></textarea>
-                    
-                    <button onclick="Settings.importSaveText()" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg text-xs font-bold transition-colors">
-                        Restore Save Progress
-                    </button>
-                </div>
+                    <div class="glass-card border border-purple-900/30 p-5 mb-5 flex flex-col sm:flex-row items-center sm:items-start gap-5 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-purple-600/10 rounded-full blur-3xl -z-10"></div>
+                        <div class="relative shrink-0">
+                            <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-purple-950 border-4 border-purple-500 flex items-center justify-center text-5xl sm:text-6xl overflow-hidden shadow-xl">
+                                <img id="prof-avatar-img" src="" class="w-full h-full object-cover hidden">
+                                <span id="prof-avatar-emoji">🧙‍♂️</span>
+                            </div>
+                            <button onclick="Profile.openAvatarModal()" class="absolute bottom-0 right-0 bg-purple-600 hover:bg-purple-500 p-2 rounded-full border border-white text-xs shadow-lg transition-transform active:scale-90">✏️</button>
+                        </div>
+                        <div class="flex-1 text-center sm:text-left w-full">
+                            <div class="flex items-center justify-center sm:justify-start gap-3 mb-1">
+                                <h3 id="prof-name" class="font-black text-3xl text-white tracking-wide">Hero</h3>
+                                <button onclick="Profile.openNameModal()" class="text-xs bg-gray-800 border border-gray-600 px-2 py-1 rounded text-purple-300 hover:bg-gray-700">Edit</button>
+                            </div>
+                            <p class="text-gray-400 text-sm mb-4">Level <span id="prof-lvl" class="font-bold text-purple-300 text-lg">1</span> | Rank: <span id="prof-rank" class="font-bold text-yellow-400">Bronze I</span></p>
+                            
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs sm:text-sm font-bold">
+                                <div class="bg-gray-900/80 border border-gray-800 p-2 rounded-lg flex justify-between"><span class="text-gray-500">Max HP</span><span id="stat-hp" class="text-green-400">100</span></div>
+                                <div class="bg-gray-900/80 border border-gray-800 p-2 rounded-lg flex justify-between"><span class="text-gray-500">ATK</span><span id="stat-atk" class="text-red-400">10</span></div>
+                                <div class="bg-gray-900/80 border border-gray-800 p-2 rounded-lg flex justify-between"><span class="text-gray-500">DEF</span><span id="stat-def" class="text-blue-400">0</span></div>
+                                <div class="bg-gray-900/80 border border-gray-800 p-2 rounded-lg flex justify-between"><span class="text-gray-500">Crit Rate</span><span id="stat-crit" class="text-yellow-400">5%</span></div>
+                                <div class="bg-gray-900/80 border border-gray-800 p-2 rounded-lg flex justify-between"><span class="text-gray-500">Lifesteal</span><span id="stat-life" class="text-purple-400">0%</span></div>
+                                <div class="bg-gray-900/80 border border-gray-800 p-2 rounded-lg flex justify-between"><span class="text-gray-500">Potions</span><span id="stat-pot" class="text-pink-400">3x</span></div>
+                            </div>
+                        </div>
+                    </div>
 
-                <!-- Reset Game -->
-                <div class="glass-card p-4 border-red-500/30">
-                    <h3 class="font-bold text-xs text-red-400 mb-1">⚠️ Reset Progress Game</h3>
-                    <p class="text-[11px] text-gray-400 mb-3">Hapus semua data game dan ulang dari awal.</p>
-                    <button onclick="Settings.resetGamePrompt()" class="w-full bg-red-900/60 text-red-300 border border-red-700 hover:bg-red-800 py-2 rounded-lg text-xs font-bold">
-                        Hapus Semua Data
-                    </button>
+                    <h3 class="font-bold text-lg text-gray-300 mb-3 border-b border-gray-800 pb-2">Equipment Digunakan</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="prof-equip-list">
+                        <!-- Rendered via JS -->
+                    </div>
                 </div>
             </div>
-        </div>
 
-    </main>
+            <!-- TAB: PENGATURAN / SETTINGS -->
+            <div id="tab-settings" class="tab-content">
+                <div class="max-w-2xl mx-auto">
+                    <h2 class="text-2xl font-bold text-gray-300 mb-4 flex items-center gap-2">⚙️ Pengaturan & Save Data</h2>
+                    
+                    <div class="glass-card border border-gray-800 p-6">
+                        <p class="text-sm text-gray-400 mb-6">Backup progress kamu dengan menyimpannya ke file <code>.txt</code>. Kamu bisa melanjutkannya kapan saja dengan melakukan Import.</p>
+                        
+                        <div class="grid grid-cols-1 gap-4">
+                            <div class="bg-gray-900/50 p-4 rounded-xl border border-purple-900/30">
+                                <h4 class="font-bold text-purple-300 mb-2">📥 Backup Data</h4>
+                                <button onclick="Settings.exportSave()" class="w-full btn-purple py-3 rounded-lg font-bold flex justify-center items-center gap-2 shadow-lg">📄 Export Save (.txt)</button>
+                            </div>
 
-    <!-- Bottom Mobile Navigation Bar -->
-    <nav class="bg-gray-950 border-t border-purple-900/30 h-16 flex-shrink-0 flex items-center justify-around z-40 relative">
-        <button class="nav-btn flex flex-col items-center gap-1 text-purple-400 w-1/5" onclick="Nav.switchTab('farm', this)">
-            <span class="text-lg">🌾</span><span class="text-[9px] font-bold">Ladang</span>
-        </button>
-        <button class="nav-btn flex flex-col items-center gap-1 text-gray-500 w-1/5" onclick="Nav.switchTab('combat', this)">
-            <span class="text-lg">⚔️</span><span class="text-[9px] font-bold">Perang</span>
-        </button>
-        <button class="nav-btn flex flex-col items-center gap-1 text-gray-500 w-1/5" onclick="Nav.switchTab('shop', this)">
-            <span class="text-lg">🛒</span><span class="text-[9px] font-bold">Toko</span>
-        </button>
-        <button class="nav-btn flex flex-col items-center gap-1 text-gray-500 w-1/5" onclick="Nav.switchTab('casino', this)">
-            <span class="text-lg">🎲</span><span class="text-[9px] font-bold">Kasino</span>
-        </button>
-        <button class="nav-btn flex flex-col items-center gap-1 text-gray-500 w-1/5" onclick="Nav.switchTab('profile', this)">
-            <span class="text-lg">👤</span><span class="text-[9px] font-bold">Profil</span>
-        </button>
-    </nav>
+                            <div class="bg-gray-900/50 p-4 rounded-xl border border-blue-900/30">
+                                <h4 class="font-bold text-blue-300 mb-2">📤 Pulihkan Data</h4>
+                                <input type="file" id="import-file" accept=".txt" onchange="Settings.handleFile(event)" class="text-sm text-gray-400 w-full bg-gray-950 border border-gray-800 p-2 rounded mb-3 outline-none">
+                                <button onclick="Settings.importSave()" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold shadow-lg">Load Data (.txt)</button>
+                            </div>
 
-    <!-- Custom Modals Overlay Container -->
-    <div id="modal-container" class="hidden modal-overlay">
-        <!-- Content dynamically injected -->
+                            <div class="mt-4 pt-4 border-t border-gray-800">
+                                <button onclick="Settings.resetGamePrompt()" class="w-full bg-red-900/20 border border-red-900/50 text-red-400 py-3 rounded-lg font-bold hover:bg-red-900 hover:text-white transition-colors">⚠️ Reset Ulang (Hapus Akun)</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: FARM (PVZ STYLE) -->
+            <div id="tab-farm" class="tab-content active">
+                <div class="max-w-3xl mx-auto h-full flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-purple-400">🌾 Kebun</h2>
+                        <button onclick="Farm.openExpandModal()" class="btn-purple text-xs sm:text-sm px-4 py-2 rounded-lg font-bold">➕ Perluas (Max 12)</button>
+                    </div>
+                    
+                    <div class="glass-card border border-gray-800 p-3 mb-4 flex gap-2 overflow-x-auto hide-scrollbar" id="seed-selector">
+                        <!-- Seeds -->
+                    </div>
+
+                    <div class="glass-card flex-1 flex flex-col justify-center bg-[#1a120e] border-2 border-[#3d2b20] p-4 sm:p-6 rounded-xl shadow-inner relative overflow-hidden">
+                        <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHBhdGggZD0iTTAgMGgyMHYyMEgwem0xMCAxMGgxMHYxMEgxMHoiIGZpbGw9IiMzZDJiMjAiIGZpbGwtb3BhY2l0eT0iMC4xIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz48L3N2Zz4=')] opacity-50"></div>
+                        <div id="farm-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-5 max-w-2xl mx-auto w-full relative z-10">
+                            <!-- Plots -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: COMBAT PVE -->
+            <div id="tab-combat" class="tab-content">
+                <div class="max-w-2xl mx-auto">
+                    <div id="pve-select">
+                        <h2 class="text-2xl font-bold text-purple-400 mb-2">⚔️ Area Petualangan</h2>
+                        <p class="text-sm text-gray-400 mb-5">Kalahkan monster untuk mencari Coin dan XP.</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="dungeon-list"></div>
+                    </div>
+
+                    <div id="pve-battle" class="hidden flex flex-col gap-4 relative">
+                        <div class="flex justify-between items-center glass-card border border-gray-800 p-3">
+                            <span class="font-bold text-purple-300" id="battle-title">Dungeon</span>
+                            <button onclick="Combat.flee()" class="text-sm text-gray-400 hover:text-white bg-gray-800 px-3 py-1 rounded border border-gray-700">🏃‍♂️ Lari</button>
+                        </div>
+
+                        <!-- Battle Arena -->
+                        <div class="glass-card border border-purple-900/30 p-6 flex flex-col relative bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiMxYzFjMjQiLz48cmVjdCB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjMmEyYTM2Ii8+PC9zdmc+')] overflow-hidden">
+                            
+                            <!-- Enemy -->
+                            <div class="flex flex-col items-center mb-10 relative z-10" id="enemy-box">
+                                <span id="enemy-name" class="font-black text-lg text-red-400 mb-2 drop-shadow-md">Slime</span>
+                                <div id="enemy-sprite" class="text-7xl sm:text-8xl mb-3 filter drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">🧌</div>
+                                <div class="w-full max-w-[220px] bg-gray-950 rounded-full h-5 relative border-2 border-gray-800 shadow-inner overflow-hidden">
+                                    <div id="enemy-hp-bar" class="h-full bg-gradient-to-r from-red-600 to-red-400 rounded-full transition-all duration-200 w-full"></div>
+                                    <span id="enemy-hp-txt" class="absolute inset-0 flex items-center justify-center text-[11px] font-black text-white drop-shadow">100/100</span>
+                                </div>
+                            </div>
+
+                            <div class="absolute top-1/2 left-0 w-full text-center -translate-y-1/2 font-black text-gray-700 text-3xl tracking-[0.5em] opacity-30 pointer-events-none z-0">VS</div>
+
+                            <!-- Player -->
+                            <div class="flex flex-col items-center relative z-10" id="player-box">
+                                <div class="flex justify-between w-full max-w-[220px] mb-1 px-1">
+                                    <span id="pve-player-name" class="font-bold text-sm text-purple-300">Hero</span>
+                                    <span class="text-xs text-gray-400 font-bold" id="pve-player-atk">⚔️10</span>
+                                </div>
+                                <div class="w-full max-w-[220px] bg-gray-950 rounded-full h-5 relative border-2 border-gray-800 shadow-inner overflow-hidden">
+                                    <div id="player-hp-bar" class="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-full transition-all duration-200 w-full"></div>
+                                    <span id="player-hp-txt" class="absolute inset-0 flex items-center justify-center text-[11px] font-black text-white drop-shadow">100/100</span>
+                                </div>
+                            </div>
+
+                            <!-- Post Battle Overlay (Lanjut/Kembali) -->
+                            <div id="pve-post-battle" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center animate-pop">
+                                <h3 class="text-3xl font-black text-yellow-400 mb-6 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]">VICTORY!</h3>
+                                <div class="flex gap-4">
+                                    <button onclick="Combat.flee()" class="bg-gray-800 text-white border border-gray-600 px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-gray-700">🏃‍♂️ Kembali</button>
+                                    <button onclick="Combat.nextPVE()" class="btn-purple px-6 py-3 rounded-xl font-bold shadow-[0_0_15px_rgba(147,92,216,0.6)]">⚔️ Lanjut Bertarung</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="grid grid-cols-3 gap-3">
+                            <button onclick="Combat.action('attack')" class="btn-action bg-gradient-to-t from-red-700 to-red-500 rounded-xl py-3 sm:py-4 font-black text-white shadow-[0_4px_0_#7f1d1d] active:translate-y-1 active:shadow-none border border-red-400/30">⚔️ ATTACK</button>
+                            <button onclick="Combat.action('skill')" class="btn-action bg-gradient-to-t from-yellow-600 to-yellow-400 rounded-xl py-3 sm:py-4 font-black text-yellow-950 shadow-[0_4px_0_#b45309] active:translate-y-1 active:shadow-none border border-yellow-300/30">✨ SKILL<div class="text-[9px] font-bold opacity-80">(Crit DMG)</div></button>
+                            <button onclick="Combat.action('heal')" class="btn-action bg-gradient-to-t from-pink-600 to-pink-400 rounded-xl py-3 sm:py-4 font-black text-white shadow-[0_4px_0_#831843] active:translate-y-1 active:shadow-none border border-pink-400/30">🧪 HEAL<div id="pve-pot-txt" class="text-[9px] font-bold opacity-80">3x</div></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: RANKED (AI PVP) -->
+            <div id="tab-ranked" class="tab-content">
+                <div class="max-w-2xl mx-auto flex flex-col h-full">
+                    <div class="glass-card border border-purple-900/50 p-6 mb-4 flex flex-col items-center justify-center bg-gradient-to-b from-purple-900/20 to-transparent border-t-4 border-t-purple-500 text-center relative overflow-hidden">
+                        <h2 class="text-2xl font-black text-white drop-shadow-md uppercase tracking-wider relative z-10">Arena PVP (Ranked)</h2>
+                        <p class="text-sm text-gray-400 mt-1 mb-6 relative z-10">Lawan AI dengan kekuatan yang menyesuaikan Rank kamu.</p>
+                        
+                        <div class="bg-black/60 p-5 rounded-2xl border border-purple-500/50 w-full max-w-sm relative z-10 shadow-2xl">
+                            <div class="text-sm text-gray-400 font-bold mb-1 uppercase tracking-widest">Rank Saat Ini</div>
+                            <div id="rank-name-display" class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 mb-3 filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">Bronze I</div>
+                            <div id="rank-stars-display" class="flex justify-center gap-1 text-3xl tracking-widest">
+                                <!-- Stars -->
+                            </div>
+                        </div>
+                        
+                        <button onclick="Ranked.findMatch()" class="mt-8 btn-purple px-10 py-4 rounded-full font-black text-lg shadow-[0_0_20px_rgba(147,92,216,0.6)] animate-pulse hover:animate-none relative z-10">CARI LAWAN ⚔️</button>
+                    </div>
+                    
+                    <!-- Ranked Info -->
+                    <div class="glass-card border border-gray-800 p-4 text-xs text-gray-400 space-y-2">
+                        <p class="font-bold text-gray-300 uppercase">Info Ranked:</p>
+                        <ul class="list-disc pl-5 space-y-1">
+                            <li>Menang: <span class="text-yellow-400">+1 Bintang</span> | Kalah: <span class="text-red-400">-1 Bintang</span>.</li>
+                            <li>Tier: Bronze ➔ Silver ➔ Gold ➔ Platinum ➔ Diamond ➔ Heroic ➔ Master ➔ Grandmaster.</li>
+                            <li>Statistik lawan AI (Max HP, ATK, DEF) akan otomatis menjadi lebih kuat seiring tingginya rank kamu.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: SHOP -->
+            <div id="tab-shop" class="tab-content">
+                <div class="max-w-3xl mx-auto">
+                    <h2 class="text-2xl font-bold text-purple-400 mb-4">🛒 Toko Equipment</h2>
+                    
+                    <div class="flex gap-2 mb-4 overflow-x-auto pb-1 hide-scrollbar">
+                        <button onclick="Shop.switchTab('weapons')" id="st-weapons" class="flex-1 py-2.5 px-4 text-sm font-bold rounded-lg bg-purple-600 text-white flex-shrink-0 shadow-md">⚔️ Senjata</button>
+                        <button onclick="Shop.switchTab('armors')" id="st-armors" class="flex-1 py-2.5 px-4 text-sm font-bold rounded-lg bg-gray-800 text-gray-400 flex-shrink-0 border border-gray-700">🛡️ Armor</button>
+                        <button onclick="Shop.switchTab('items')" id="st-items" class="flex-1 py-2.5 px-4 text-sm font-bold rounded-lg bg-gray-800 text-gray-400 flex-shrink-0 border border-gray-700">🧪 Item</button>
+                    </div>
+
+                    <div id="shop-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                </div>
+            </div>
+
+            <!-- TAB: BLACKSMITH (FORGE) -->
+            <div id="tab-forge" class="tab-content">
+                <div class="max-w-2xl mx-auto">
+                    <h2 class="text-2xl font-bold text-purple-400 mb-2 flex items-center gap-2">⚒️ Blacksmith</h2>
+                    <p class="text-sm text-gray-400 mb-5">Tingkatkan Level menggunakan Koin. Naikkan Grade (Max 10) menggunakan Diamond!</p>
+                    
+                    <div class="grid grid-cols-1 gap-5" id="forge-list">
+                        <!-- Forge items -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: CASINO -->
+            <div id="tab-casino" class="tab-content">
+                <div class="max-w-2xl mx-auto" id="casino-menu">
+                    <h2 class="text-2xl font-bold text-purple-400 mb-2">🎲 Kasino Fortuna</h2>
+                    <p class="text-sm text-gray-400 mb-5">Ubah nasibmu di sini (Hanya menggunakan uang in-game)!</p>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="glass-card border border-yellow-900/30 p-5 cursor-pointer hover:border-yellow-500 transition-colors bg-gradient-to-br from-gray-900 to-black" onclick="Casino.open('slots')">
+                            <div class="text-5xl mb-2">🎰</div>
+                            <h3 class="font-bold text-lg text-yellow-400">Mesin Slot</h3>
+                            <p class="text-xs text-gray-400">Putar roda berkecepatan tinggi, kejar Jackpot!</p>
+                        </div>
+                        <div class="glass-card border border-purple-900/30 p-5 cursor-pointer hover:border-purple-500 transition-colors bg-gradient-to-br from-gray-900 to-black" onclick="Casino.open('blackjack')">
+                            <div class="text-5xl mb-2">🃏</div>
+                            <h3 class="font-bold text-lg text-purple-300">Blackjack 21</h3>
+                            <p class="text-xs text-gray-400">Classic Dealer vs Player. Segera hadir!</p>
+                        </div>
+                        <div class="glass-card border border-red-900/30 p-5 cursor-pointer hover:border-red-500 transition-colors bg-gradient-to-br from-gray-900 to-black" onclick="Casino.open('coinflip')">
+                            <div class="text-5xl mb-2">🪙</div>
+                            <h3 class="font-bold text-lg text-red-400">Coinflip</h3>
+                            <p class="text-xs text-gray-400">Tebak Heads atau Tails. Double or Nothing!</p>
+                        </div>
+                        <div class="glass-card border border-blue-900/30 p-5 cursor-pointer hover:border-blue-500 transition-colors bg-gradient-to-br from-gray-900 to-black" onclick="Casino.open('dice')">
+                            <div class="text-5xl mb-2">🎲</div>
+                            <h3 class="font-bold text-lg text-blue-400">Dice High/Low</h3>
+                            <p class="text-xs text-gray-400">Tebak total 2 dadu: High, Low, atau 7.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Games Container -->
+                <div id="casino-game-view" class="hidden max-w-lg mx-auto">
+                    <button onclick="Casino.close()" class="mb-4 text-gray-400 hover:text-white font-bold text-sm bg-gray-800 px-3 py-1.5 rounded-lg">← Kembali</button>
+                    <div id="cg-content"></div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Mobile Bottom Nav (Hidden on Desktop) -->
+        <nav class="md:hidden bg-gray-950 border-t border-gray-800 h-16 flex-shrink-0 flex items-center overflow-x-auto z-40 relative pb-safe px-2 hide-scrollbar">
+            <div class="flex gap-2 w-full justify-between min-w-[320px]">
+                <button class="nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-gray-500 active min-w-[50px]" onclick="Nav.switchTab('farm', this)"><span class="text-xl">🌾</span><span class="text-[9px] font-bold">Farm</span></button>
+                <button class="nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-gray-500 min-w-[50px]" onclick="Nav.switchTab('combat', this)"><span class="text-xl">⚔️</span><span class="text-[9px] font-bold">Battle</span></button>
+                <button class="nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-gray-500 min-w-[50px]" onclick="Nav.switchTab('ranked', this)"><span class="text-xl">🏆</span><span class="text-[9px] font-bold">Ranked</span></button>
+                <button class="nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-gray-500 min-w-[50px]" onclick="Nav.switchTab('shop', this)"><span class="text-xl">🛒</span><span class="text-[9px] font-bold">Shop</span></button>
+                <button class="nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-gray-500 min-w-[50px]" onclick="Nav.switchTab('forge', this)"><span class="text-xl">⚒️</span><span class="text-[9px] font-bold">Forge</span></button>
+                <button class="nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-gray-500 min-w-[50px]" onclick="Nav.switchTab('casino', this)"><span class="text-xl">🎲</span><span class="text-[9px] font-bold">Casino</span></button>
+                <button class="nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-gray-500 min-w-[50px]" onclick="Nav.switchTab('settings', this)"><span class="text-xl">⚙️</span><span class="text-[9px] font-bold">Menu</span></button>
+            </div>
+        </nav>
+
     </div>
 
+    <!-- Generic Modal Overlay -->
+    <div id="modal-container" class="hidden modal-overlay"></div>
+    <canvas id="img-canvas" class="hidden"></canvas>
 </div>
 
 <script>
-    // ================= DATA CONFIG & DATABASES =================
-    const SAVE_KEY = "quest_cultivate_v2_save";
+    // ==========================================
+    // 1. DATABASES & CONFIG
+    // ==========================================
+    const SAVE_KEY = "quest_cultivate_v4_save";
 
-    const CROPS_DB = {
-        padi: { name: "Padi", time: 4000, coins: 15, xp: 10, diamondChance: 0, icon: "🌾", seedPrice: 5, currency: "coins" },
-        jagung: { name: "Jagung", time: 8000, coins: 45, xp: 25, diamondChance: 0.05, icon: "🌽", seedPrice: 15, currency: "coins" },
-        cabai: { name: "Cabai Emas", time: 15000, coins: 120, xp: 60, diamondChance: 0.15, icon: "🌶️", seedPrice: 40, currency: "coins" },
-        bunga: { name: "Bunga Kristal", time: 30000, coins: 300, xp: 150, diamondChance: 0.35, icon: "🪷", seedPrice: 100, currency: "coins" },
-        diamond_tree: { name: "Pohon Diamond", time: 60000, coins: 600, xp: 300, diamondChance: 1.0, icon: "💎", seedPrice: 5, currency: "diamonds" }
+    const CROPS = {
+        padi: { name: "Padi", time1: 2000, time2: 2000, coins: 20, seedCost: 5, icon: "🌾", yield: 'coins' },
+        jagung: { name: "Jagung", time1: 4000, time2: 4000, coins: 50, seedCost: 15, icon: "🌽", yield: 'coins' },
+        cabai: { name: "Cabai Emas", time1: 8000, time2: 8000, coins: 150, seedCost: 40, icon: "🌶️", yield: 'coins' },
+        bunga: { name: "Bunga Kristal", time1: 15000, time2: 15000, coins: 350, seedCost: 100, icon: "🪷", yield: 'coins' },
+        diamond_tree: { name: "Pohon Diamond", time1: 30000, time2: 30000, diam: 2, seedCost: 500, icon: "💎", yield: 'diam' }
     };
 
-    const WEAPONS_DB = {
-        pedang_kayu: { name: "Pedang Kayu", atk: 2, crit: 0, lifesteal: 0, price: 0, currency: "coins", icon: "🗡️", desc: "Senjata latihan sederhana." },
-        belati_besi: { name: "Belati Besi", atk: 15, crit: 5, lifesteal: 0, price: 150, currency: "coins", icon: "🗡️", desc: "Cepat dan lumayan tajam." },
-        katana_api: { name: "Pedang Katana Api", atk: 40, crit: 10, lifesteal: 0, price: 600, currency: "coins", icon: "⚔️", desc: "Tebasan membara." },
-        tongkat_sihir: { name: "Tongkat Kristal Sihir", atk: 70, crit: 15, lifesteal: 0, price: 1500, currency: "coins", icon: "🔮", desc: "Kekuatan sihir elemen." },
-        sabit_kegelapan: { name: "Sabit Kegelapan", atk: 120, crit: 25, lifesteal: 10, price: 50, currency: "diamonds", icon: "🪓", desc: "Mengisap HP musuh saat menyerang!" },
-        blade_azusa: { name: "Blade of Azusa", atk: 200, crit: 35, lifesteal: 20, price: 150, currency: "diamonds", icon: "⚡", desc: "Pedang mitos dengan kekuatan kilat mutlak." }
+    const TIERS = {
+        common: { name: 'Common', class: 'tier-common', color: '#9ca3af' },
+        uncommon: { name: 'Uncommon', class: 'tier-uncommon', color: '#3b82f6' },
+        rare: { name: 'Rare', class: 'tier-rare', color: '#d1d5db' },
+        special: { name: 'Special', class: 'tier-special', color: '#06b6d4' },
+        mythical: { name: 'Mythical', class: 'tier-mythical', color: '#a855f7' },
+        legendary: { name: 'Legendary', class: 'tier-legendary', color: '#ef4444' }
     };
 
-    const ARMORS_DB = {
-        baju_kain: { name: "Baju Kain", hp: 10, def: 1, price: 0, currency: "coins", icon: "👕", desc: "Pakaian biasa pemula." },
-        zirah_besi: { name: "Zirah Besi", hp: 50, def: 5, price: 200, currency: "coins", icon: "🛡️", desc: "Pelindung besi standar." },
-        pelindung_kristal: { name: "Pelindung Kristal", hp: 150, def: 15, price: 1000, currency: "coins", icon: "🛡️", desc: "Memantulkan sebagian serangan." },
-        zirah_naga: { name: "Zirah Naga Abadi", hp: 400, def: 35, price: 80, currency: "diamonds", icon: "🐉", desc: "Dibuat dari sisik naga legendaris." }
+    const WEAPONS = {
+        w_wood: { name: "Pedang Kayu", tier: 'common', baseAtk: 5, baseCrit: 0, life: 0, price: 0, icon: "🗡️", isVanitas: false },
+        w_iron: { name: "Belati Besi", tier: 'uncommon', baseAtk: 15, baseCrit: 5, life: 0, price: 150, icon: "🗡️", isVanitas: false },
+        w_fire: { name: "Katana Api", tier: 'rare', baseAtk: 35, baseCrit: 10, life: 0, price: 600, icon: "⚔️", isVanitas: false },
+        w_magic: { name: "Tongkat Sihir", tier: 'special', baseAtk: 60, baseCrit: 15, life: 0, price: 1500, icon: "🔮", isVanitas: false },
+        w_scythe: { name: "Sabit Kegelapan", tier: 'mythical', baseAtk: 100, baseCrit: 20, life: 10, price: 4000, icon: "🪓", isVanitas: false },
+        w_azusa: { name: "Blade of Azusa", tier: 'mythical', baseAtk: 250, baseCrit: 30, life: 25, price: 12000, icon: "⚡", isVanitas: false },
+        w_vanitas: { name: "<i><b>Et Omnia Vanitas</b></i>", tier: 'legendary', baseAtk: 999, baseCrit: 100, life: 50, price: 5000, currency: 'diamonds', icon: "🔫", isVanitas: true, desc: "Satu tembakan, satu nyawa. INSTANT KILL BOSS." }
     };
 
-    const DUNGEONS_DB = [
-        { id: 'hutan', name: 'Hutan Pinggiran', reqLevel: 1, icon: '🌲', desc: 'Sangat cocok untuk pemula.', enemies: [
-            { name: "Slime Hijau", hp: 40, atk: 6, def: 0, xp: 20, coins: 15, diamondChance: 0, sprite: "🧌" },
-            { name: "Serigala Hutan", hp: 75, atk: 12, def: 2, xp: 35, coins: 30, diamondChance: 0.05, sprite: "🐺" }
-        ]},
-        { id: 'goa', name: 'Goa Kristal', reqLevel: 3, icon: '💎', desc: 'Dungeon menengah berhadiah lumayan.', enemies: [
-            { name: "Golem Batu", hp: 160, atk: 22, def: 8, xp: 80, coins: 70, diamondChance: 0.15, sprite: "🗿" },
-            { name: "Elemen Kristal", hp: 240, atk: 30, def: 12, xp: 130, coins: 120, diamondChance: 0.3, sprite: "👾" }
-        ]},
-        { id: 'benteng', name: 'Benteng Kegelapan', reqLevel: 6, icon: '🏰', desc: 'Musuh sangat kuat & Diamond melimpah.', enemies: [
-            { name: "Tengkorak Zirah", hp: 400, atk: 48, def: 20, xp: 250, coins: 250, diamondChance: 0.5, sprite: "💀" },
-            { name: "Iblis Merah", hp: 600, atk: 65, def: 28, xp: 400, coins: 400, diamondChance: 0.8, sprite: "👹" }
-        ]},
-        { id: 'naga', name: 'Sarang Naga (BOSS)', reqLevel: 10, icon: '🐲', desc: 'Boss Stage! Dijamin dapat Diamond banyak.', enemies: [
-            { name: "Naga Api Merah", hp: 1300, atk: 95, def: 45, xp: 1200, coins: 1200, diamondGuaranteed: 8, sprite: "🐉" }
-        ]}
+    const ARMORS = {
+        a_cloth: { name: "Baju Kain", tier: 'common', baseHp: 20, baseDef: 1, price: 0, icon: "👕" },
+        a_iron: { name: "Zirah Besi", tier: 'uncommon', baseHp: 80, baseDef: 5, price: 300, icon: "🛡️" },
+        a_crystal: { name: "Pelindung Kristal", tier: 'rare', baseHp: 200, baseDef: 15, price: 1200, icon: "💎" },
+        a_dragon: { name: "Zirah Naga Abadi", tier: 'mythical', baseHp: 500, baseDef: 35, price: 5000, icon: "🐉" },
+        a_azusa: { name: "Trinity Angel's Wings", tier: 'legendary', baseHp: 1500, baseDef: 80, price: 2000, currency: 'diamonds', icon: "🪽" }
+    };
+
+    const DUNGEONS = [
+        { id: 'd1', name: 'Hutan Pinggiran', icon: '🌲', enemies: [{n:"Slime", h:50, a:5, d:1, c:20, xp:20, s:"🧌"}, {n:"Serigala", h:90, a:12, d:3, c:35, xp:35, s:"🐺"}] },
+        { id: 'd2', name: 'Goa Kristal', icon: '⛰️', enemies: [{n:"Golem", h:200, a:25, d:10, c:80, xp:80, s:"🗿"}, {n:"Kelelawar", h:150, a:35, d:5, c:90, xp:90, s:"🦇"}] },
+        { id: 'd3', name: 'Benteng Gelap', icon: '🏰', enemies: [{n:"Tengkorak", h:450, a:50, d:20, c:200, xp:250, s:"💀"}, {n:"Iblis", h:700, a:80, d:30, c:350, xp:450, s:"👹"}] },
+        { id: 'd4', name: 'Sarang Naga (BOSS)', icon: '🌋', isBoss: true, enemies: [{n:"Naga Merah", h:2500, a:150, d:60, c:1500, xp:2000, diam: 5, s:"🐉", boss:true}] },
+        { id: 'd5', name: 'Void Realm (BOSS)', icon: '🌌', isBoss: true, enemies: [{n:"Raja Void", h:8000, a:350, d:150, c:5000, xp:6000, diam: 20, s:"👾", boss:true}] }
     ];
 
-    // --- GAME INITIAL STATE ---
-    const INITIAL_STATE = {
-        player: {
-            name: "Hero",
-            avatar: "🧙‍♂️",
-            level: 1,
-            xp: 0,
-            coins: 100,
-            diamonds: 10,
-            potions: 3,
-            stats: { battlesWon: 0, cropsHarvested: 0 }
-        },
-        farm: {
-            unlockedPlots: 4, // Max 12
-            selectedSeed: 'padi',
-            plots: Array.from({length: 12}, () => ({ state: 'empty', cropType: null, readyTime: 0 }))
-        },
-        equipment: {
-            weapon: 'pedang_kayu',
-            armor: 'baju_kain'
-        },
-        inventory: ['pedang_kayu', 'baju_kain']
+    const RANKS = [
+        { id: 'b1', name: 'Bronze I', req: 3, m: 1.0 }, { id: 'b2', name: 'Bronze II', req: 3, m: 1.2 }, { id: 'b3', name: 'Bronze III', req: 4, m: 1.5 },
+        { id: 's1', name: 'Silver I', req: 4, m: 2.0 }, { id: 's2', name: 'Silver II', req: 4, m: 2.5 }, { id: 's3', name: 'Silver III', req: 5, m: 3.0 },
+        { id: 'g1', name: 'Gold I', req: 5, m: 4.0 }, { id: 'g2', name: 'Gold II', req: 5, m: 5.0 }, { id: 'g3', name: 'Gold III', req: 5, m: 6.0 }, { id: 'g4', name: 'Gold IV', req: 5, m: 7.0 }, { id: 'g5', name: 'Gold V', req: 5, m: 8.5 },
+        { id: 'p1', name: 'Platinum I', req: 5, m: 10 }, { id: 'p2', name: 'Platinum II', req: 5, m: 12 }, { id: 'p3', name: 'Platinum III', req: 5, m: 15 }, { id: 'p4', name: 'Platinum IV', req: 5, m: 18 }, { id: 'p5', name: 'Platinum V', req: 5, m: 22 },
+        { id: 'd1', name: 'Diamond I', req: 6, m: 28 }, { id: 'd2', name: 'Diamond II', req: 6, m: 35 }, { id: 'd3', name: 'Diamond III', req: 6, m: 45 }, { id: 'd4', name: 'Diamond IV', req: 6, m: 55 }, { id: 'd5', name: 'Diamond V', req: 6, m: 70 }, { id: 'd6', name: 'Diamond VI', req: 6, m: 90 }, { id: 'd7', name: 'Diamond VII', req: 6, m: 110 },
+        { id: 'h1', name: 'Heroic I', req: 10, m: 150 }, { id: 'h2', name: 'Heroic II', req: 10, m: 200 }, { id: 'h3', name: 'Heroic III', req: 10, m: 260 }, { id: 'h4', name: 'Heroic IV', req: 10, m: 330 }, { id: 'h5', name: 'Heroic V', req: 10, m: 400 },
+        { id: 'm1', name: 'Master', req: 50, m: 600 },
+        { id: 'gm', name: 'Grandmaster', req: 999999, m: 1000 }
+    ];
+
+    // ==========================================
+    // 2. STATE & INIT
+    // ==========================================
+    const DEFAULT_STATE = {
+        player: { name: "Wanderer", avatarEmoji: "🧙‍♂️", customAvatar: null, level: 1, xp: 0, coins: 500, diamonds: 50, potions: 5 },
+        rank: { index: 0, stars: 0 },
+        farm: { unlocked: 4, seed: 'padi', plots: Array(12).fill().map(()=>({s:'empty'})) },
+        equip: { w: 'w_wood', a: 'a_cloth' },
+        inv: {
+            w: { 'w_wood': { lvl: 1, grd: 1 } },
+            a: { 'a_cloth': { lvl: 1, grd: 1 } }
+        }
     };
 
-    let game = JSON.parse(JSON.stringify(INITIAL_STATE));
-    let farmInterval;
-    let autoSaveInterval;
+    let game = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    let loops = { farm: null, save: null };
 
-    // --- UTILITIES ---
+    // ==========================================
+    // 3. UTILS & UI CORE
+    // ==========================================
     const Utils = {
         toast: (msg) => {
-            const container = document.getElementById('toast-container');
+            const c = document.getElementById('toast-container');
             const el = document.createElement('div');
-            el.className = 'toast animate-pop';
-            el.innerText = msg;
-            container.appendChild(el);
-            setTimeout(() => {
-                el.style.opacity = '0';
-                el.style.transition = 'opacity 0.3s';
-                setTimeout(() => el.remove(), 300);
-            }, 2200);
+            el.className = 'toast animate-pop'; el.innerHTML = msg;
+            c.appendChild(el);
+            setTimeout(() => { el.style.opacity = 0; el.style.transition = '0.3s'; setTimeout(()=>el.remove(),300); }, 3000);
         },
-        floatingText: (text, parentId, colorClass = 'text-red-500') => {
-            const parent = document.getElementById(parentId);
-            if (!parent) return;
+        floatTxt: (txt, pid, cls='text-red-400') => {
+            const p = document.getElementById(pid); if(!p) return;
             const el = document.createElement('div');
-            el.className = `floating-text ${colorClass} text-xl`;
-            el.innerText = text;
-            
-            const offsetX = (Math.random() - 0.5) * 40;
-            el.style.left = `calc(50% + ${offsetX}px)`;
-            el.style.top = `40%`;
-            
-            parent.appendChild(el);
-            setTimeout(() => el.remove(), 900);
+            el.className = `floating-text ${cls}`; el.innerText = txt;
+            el.style.left = `calc(50% + ${(Math.random()-0.5)*60}px)`; el.style.top = '40%';
+            p.appendChild(el); setTimeout(()=>el.remove(), 1000);
         },
-        saveGame: () => {
-            localStorage.setItem(SAVE_KEY, JSON.stringify(game));
-        },
-        loadGame: () => {
-            const saved = localStorage.getItem(SAVE_KEY);
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    game = { ...INITIAL_STATE, ...parsed };
-                    game.player = { ...INITIAL_STATE.player, ...parsed.player };
-                    game.player.stats = { ...INITIAL_STATE.player.stats, ...(parsed.player.stats || {}) };
-                    game.farm = { ...INITIAL_STATE.farm, ...parsed.farm };
-                    game.equipment = { ...INITIAL_STATE.equipment, ...parsed.equipment };
-                } catch(e) { console.error("Save corrupted", e); }
-            }
-        },
-        getXpNeeded: (lvl) => lvl * 100,
-        addXp: (amount) => {
-            game.player.xp += amount;
-            let needed = Utils.getXpNeeded(game.player.level);
+        addCoins: (v) => { game.player.coins += v; UI.updateHeader(); },
+        addDiam: (v) => { game.player.diamonds += v; UI.updateHeader(); },
+        addXp: (v) => {
+            game.player.xp += v;
+            let need = game.player.level * 150;
             let lvlUp = false;
-            while (game.player.xp >= needed) {
-                game.player.xp -= needed;
-                game.player.level++;
-                needed = Utils.getXpNeeded(game.player.level);
-                lvlUp = true;
+            while(game.player.xp >= need) {
+                game.player.xp -= need; game.player.level++; need = game.player.level * 150; lvlUp = true;
             }
-            if (lvlUp) Utils.toast(`🎉 LEVEL UP! Kamu sekarang Level ${game.player.level}`);
-            UI.updateHeader();
+            if(lvlUp) Utils.toast(`🎉 LEVEL UP! Kamu sekarang Lv.${game.player.level}`);
+            UI.updateHeader(); if(document.getElementById('tab-profile').classList.contains('active')) Profile.render();
         },
-        addCoins: (amt) => { game.player.coins = Math.max(0, game.player.coins + amt); UI.updateHeader(); },
-        addDiamonds: (amt) => { game.player.diamonds = Math.max(0, game.player.diamonds + amt); UI.updateHeader(); },
-        getCalculatedStats: () => {
-            const lvl = game.player.level;
-            const w = WEAPONS_DB[game.equipment.weapon] || WEAPONS_DB.pedang_kayu;
-            const a = ARMORS_DB[game.equipment.armor] || ARMORS_DB.baju_kain;
+        calcStats: () => {
+            const p = game.player;
+            const wId = game.equip.w; const aId = game.equip.a;
+            const wBase = WEAPONS[wId]; const aBase = ARMORS[aId];
+            const wData = game.inv.w[wId]; const aData = game.inv.a[aId];
 
-            const maxHp = 100 + ((lvl - 1) * 20) + (a.hp || 0);
-            const atk = 10 + ((lvl - 1) * 3) + (w.atk || 0);
-            const def = 0 + ((lvl - 1) * 1) + (a.def || 0);
-            const crit = 5 + (w.crit || 0);
-            const lifesteal = 0 + (w.lifesteal || 0);
+            // Formula: Base + (Level * 10%) * (Grade * 1.5)
+            const wM = (1 + (wData.lvl-1)*0.1) * Math.pow(1.2, wData.grd-1);
+            const aM = (1 + (aData.lvl-1)*0.1) * Math.pow(1.2, aData.grd-1);
 
-            return { maxHp, atk, def, crit, lifesteal };
-        }
+            return {
+                hp: Math.floor(100 + (p.level*20) + (aBase.baseHp * aM)),
+                atk: Math.floor(10 + (p.level*5) + (wBase.baseAtk * wM)),
+                def: Math.floor(0 + (p.level*2) + (aBase.baseDef * aM)),
+                crit: wBase.baseCrit,
+                life: wBase.life,
+                isVanitas: wBase.isVanitas
+            };
+        },
+        formatNum: (n) => n >= 1000000 ? (n/1000000).toFixed(1)+'M' : n >= 1000 ? (n/1000).toFixed(1)+'k' : n
     };
 
-    // --- NAVIGATION ---
-    const Nav = {
-        switchTab: (tabId, btnElement) => {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById('tab-' + tabId).classList.add('active');
-            
-            if (btnElement) {
-                document.querySelectorAll('.nav-btn').forEach(btn => {
-                    btn.classList.remove('text-purple-400');
-                    btn.classList.add('text-gray-500');
-                });
-                btnElement.classList.remove('text-gray-500');
-                btnElement.classList.add('text-purple-400');
-            }
-            
-            // Tab Specific Refresh
-            if (tabId === 'profile') Profile.render();
-            if (tabId === 'farm') Farm.render();
-            if (tabId === 'shop') Shop.render();
-            if (tabId === 'combat') Combat.renderDungeonList();
-        }
-    };
-
-    // --- UI UPDATER ---
     const UI = {
-        updateHeader: () => {
-            document.getElementById('header-name').innerText = game.player.name;
-            document.getElementById('header-avatar').innerText = game.player.avatar;
-            document.getElementById('header-level').innerText = game.player.level;
-            document.getElementById('header-coins').innerText = game.player.coins;
-            document.getElementById('header-diamonds').innerText = game.player.diamonds;
-
-            const needed = Utils.getXpNeeded(game.player.level);
-            const pct = Math.min(100, (game.player.xp / needed) * 100);
-            document.getElementById('header-xp-bar').style.width = pct + '%';
-        },
         init: () => {
-            Utils.loadGame();
+            Settings.load();
             UI.updateHeader();
             Farm.init();
-            Shop.init();
+            loops.save = setInterval(Settings.save, 5000);
+            Nav.switchTab('farm');
+        },
+        updateHeader: () => {
+            const p = game.player; const r = RANKS[game.rank.index];
+            ['top-coins', 'top-diamonds'].forEach((id,i) => document.getElementById(id).innerText = Utils.formatNum([p.coins, p.diamonds][i]));
             
-            autoSaveInterval = setInterval(Utils.saveGame, 5000);
+            // Side/Mobile Profile
+            document.getElementById('mobile-name').innerText = p.name;
+            document.getElementById('sidebar-name').innerText = p.name;
+            document.getElementById('mobile-lvl').innerText = p.level;
+            document.getElementById('sidebar-lvl').innerText = p.level;
+            document.getElementById('sidebar-rank').innerText = r.name;
+            
+            let xpPct = Math.min(100, (p.xp / (p.level*150)) * 100);
+            document.getElementById('sidebar-xp').style.width = xpPct + '%';
+
+            // Avatars
+            const simg = document.getElementById('sidebar-avatar-img');
+            const smoj = document.getElementById('sidebar-avatar-emoji');
+            const mimg = document.getElementById('mobile-avatar-img');
+            const mmoj = document.getElementById('mobile-avatar-emoji');
+
+            if(p.customAvatar) {
+                simg.src = p.customAvatar; mimg.src = p.customAvatar;
+                simg.classList.remove('hidden'); mimg.classList.remove('hidden');
+                smoj.classList.add('hidden'); mmoj.classList.add('hidden');
+            } else {
+                simg.classList.add('hidden'); mimg.classList.add('hidden');
+                smoj.classList.remove('hidden'); mmoj.classList.remove('hidden');
+                smoj.innerText = p.avatarEmoji; mmoj.innerText = p.avatarEmoji;
+            }
         }
     };
 
-    // --- PROFILE SYSTEM ---
+    const Nav = {
+        switchTab: (id, btn = null) => {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            const tab = document.getElementById('tab-'+id);
+            if(tab) tab.classList.add('active');
+            
+            if(btn) {
+                document.querySelectorAll('.nav-btn').forEach(b => {
+                    b.classList.remove('text-purple-400', 'bg-gray-800'); 
+                    b.classList.add('text-gray-500');
+                    if(b.parentElement.tagName === 'ASIDE' && !b.classList.contains('text-purple-300')) {
+                       b.classList.remove('text-purple-300'); 
+                    }
+                });
+                if(btn.closest('nav') && btn.closest('nav').classList.contains('md:hidden')) { // mobile
+                    btn.classList.remove('text-gray-500'); btn.classList.add('text-purple-400');
+                } else { // desktop
+                    btn.classList.add('bg-gray-800', 'text-purple-300');
+                }
+            }
+
+            if(id === 'profile') Profile.render();
+            if(id === 'shop') Shop.render();
+            if(id === 'combat') Combat.renderList();
+            if(id === 'forge') Forge.render();
+            if(id === 'ranked') Ranked.render();
+            if(id === 'casino') Casino.close();
+        },
+        modal: (html) => {
+            const m = document.getElementById('modal-container');
+            m.innerHTML = html; m.classList.remove('hidden');
+        },
+        closeModal: () => document.getElementById('modal-container').classList.add('hidden')
+    };
+
+    // ==========================================
+    // 4. PROFILE & SETTINGS
+    // ==========================================
     const Profile = {
         render: () => {
-            document.getElementById('profile-name-display').innerText = game.player.name;
-            document.getElementById('profile-avatar-display').innerText = game.player.avatar;
-            document.getElementById('profile-level').innerText = game.player.level;
+            const p = game.player; const s = Utils.calcStats(); const r = RANKS[game.rank.index];
+            document.getElementById('prof-name').innerText = p.name;
+            document.getElementById('prof-lvl').innerText = p.level;
+            document.getElementById('prof-rank').innerText = r.name;
+            
+            const img = document.getElementById('prof-avatar-img');
+            const moj = document.getElementById('prof-avatar-emoji');
+            if(p.customAvatar) {
+                img.src = p.customAvatar; img.classList.remove('hidden'); moj.classList.add('hidden');
+            } else {
+                img.classList.add('hidden'); moj.classList.remove('hidden'); moj.innerText = p.avatarEmoji;
+            }
 
-            const stats = Utils.getCalculatedStats();
-            document.getElementById('stat-hp').innerText = stats.maxHp;
-            document.getElementById('stat-atk').innerText = stats.atk;
-            document.getElementById('stat-def').innerText = stats.def;
-            document.getElementById('stat-crit').innerText = stats.crit + '%';
-            document.getElementById('stat-lifesteal').innerText = stats.lifesteal + '%';
-            document.getElementById('stat-potions').innerText = game.player.potions + 'x';
+            document.getElementById('stat-hp').innerText = s.hp;
+            document.getElementById('stat-atk').innerText = s.atk;
+            document.getElementById('stat-def').innerText = s.def;
+            document.getElementById('stat-crit').innerText = s.crit + '%';
+            document.getElementById('stat-life').innerText = s.life + '%';
+            document.getElementById('stat-pot').innerText = p.potions;
 
-            document.getElementById('stat-battles').innerText = game.player.stats.battlesWon;
-            document.getElementById('stat-crops').innerText = game.player.stats.cropsHarvested;
-        },
-        openEditModal: () => {
-            const container = document.getElementById('modal-container');
-            container.innerHTML = `
-                <div class="glass-card p-5 w-full max-w-xs animate-pop">
-                    <h3 class="font-bold text-sm text-purple-300 mb-3">Ganti Nama Player</h3>
-                    <input type="text" id="new-name-input" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-xs text-white mb-4 outline-none focus:border-purple-500" value="${game.player.name}">
-                    <div class="flex gap-2">
-                        <button onclick="Profile.closeModal()" class="flex-1 bg-gray-800 text-gray-300 py-2 rounded text-xs font-bold">Batal</button>
-                        <button onclick="Profile.saveName()" class="flex-1 btn-purple py-2 rounded text-xs font-bold">Simpan</button>
+            // Render Equipped Gears
+            const eList = document.getElementById('prof-equip-list');
+            const wDb = WEAPONS[game.equip.w]; const wDt = game.inv.w[game.equip.w];
+            const aDb = ARMORS[game.equip.a]; const aDt = game.inv.a[game.equip.a];
+            
+            eList.innerHTML = `
+                <div class="glass-card p-4 flex items-center gap-4 ${TIERS[wDb.tier].class} bg-gray-900/60 relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 text-6xl opacity-10">${wDb.icon}</div>
+                    <div class="text-4xl bg-black/50 p-2 rounded-xl shadow-inner z-10">${wDb.icon}</div>
+                    <div class="z-10">
+                        <div class="text-[10px] uppercase font-bold" style="color:${TIERS[wDb.tier].color}">${TIERS[wDb.tier].name}</div>
+                        <h4 class="font-bold text-white text-sm">${wDb.name}</h4>
+                        <div class="text-xs text-gray-400 mt-1">Lv.${wDt.lvl} | Grade ${wDt.grd}⭐</div>
+                    </div>
+                </div>
+                <div class="glass-card p-4 flex items-center gap-4 ${TIERS[aDb.tier].class} bg-gray-900/60 relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 text-6xl opacity-10">${aDb.icon}</div>
+                    <div class="text-4xl bg-black/50 p-2 rounded-xl shadow-inner z-10">${aDb.icon}</div>
+                    <div class="z-10">
+                        <div class="text-[10px] uppercase font-bold" style="color:${TIERS[aDb.tier].color}">${TIERS[aDb.tier].name}</div>
+                        <h4 class="font-bold text-white text-sm">${aDb.name}</h4>
+                        <div class="text-xs text-gray-400 mt-1">Lv.${aDt.lvl} | Grade ${aDt.grd}⭐</div>
                     </div>
                 </div>
             `;
-            container.classList.remove('hidden');
+        },
+        openNameModal: () => {
+            Nav.modal(`
+                <div class="glass-card p-6 w-full max-w-sm animate-pop bg-gray-900 border border-gray-700">
+                    <h3 class="font-bold text-lg text-purple-300 mb-3">Ubah Nama Karakter</h3>
+                    <input type="text" id="inp-name" class="w-full bg-black border border-gray-700 rounded-lg p-3 text-white mb-4 outline-none font-bold text-center" value="${game.player.name}" maxlength="15">
+                    <div class="flex gap-2">
+                        <button onclick="Nav.closeModal()" class="flex-1 bg-gray-800 text-white py-2.5 rounded-lg font-bold hover:bg-gray-700">Batal</button>
+                        <button onclick="Profile.saveName()" class="flex-1 btn-purple py-2.5 rounded-lg font-bold">Simpan</button>
+                    </div>
+                </div>
+            `);
         },
         saveName: () => {
-            const val = document.getElementById('new-name-input').value.trim();
-            if (val) {
-                game.player.name = val.substring(0, 12);
-                UI.updateHeader();
-                Profile.render();
-                Utils.toast("Nama diperbarui!");
-            }
-            Profile.closeModal();
+            const val = document.getElementById('inp-name').value.trim();
+            if(val) { game.player.name = val; UI.updateHeader(); Profile.render(); Utils.toast("Nama berhasil diubah!"); }
+            Nav.closeModal();
         },
         openAvatarModal: () => {
-            const avatars = ['🧙‍♂️', '🥷', '⚔️', '🤴', '🧝‍♀️', '👑', '🦸‍♂️', '🧛‍♂️'];
-            const container = document.getElementById('modal-container');
-            container.innerHTML = `
-                <div class="glass-card p-5 w-full max-w-xs animate-pop text-center">
-                    <h3 class="font-bold text-sm text-purple-300 mb-3">Pilih Avatar</h3>
-                    <div class="grid grid-cols-4 gap-3 mb-4">
-                        ${avatars.map(a => `<button onclick="Profile.selectAvatar('${a}')" class="text-2xl bg-gray-900 p-2 rounded-xl hover:bg-purple-900/50">${a}</button>`).join('')}
+            const emojis = ['🧙‍♂️','🥷','⚔️','🤴','🧝‍♀️','👑','🧛‍♂️','🧟‍♂️','🦹‍♂️'];
+            Nav.modal(`
+                <div class="glass-card p-6 w-full max-w-sm animate-pop text-center bg-gray-900 border border-gray-700">
+                    <h3 class="font-bold text-lg text-purple-300 mb-4">Ganti Avatar</h3>
+                    
+                    <div class="bg-black/50 p-4 rounded-xl border border-gray-800 mb-4">
+                        <p class="text-xs text-gray-400 mb-3">Upload Foto Sendiri (Square Crop)</p>
+                        <input type="file" accept="image/*" onchange="Profile.handleImgUpload(event)" class="text-xs text-white w-full file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-purple-900 file:text-purple-300 hover:file:bg-purple-800">
                     </div>
-                    <button onclick="Profile.closeModal()" class="w-full bg-gray-800 text-gray-300 py-2 rounded text-xs font-bold">Tutup</button>
+
+                    <p class="text-xs text-gray-500 mb-2 font-bold uppercase tracking-wider">Atau Pilih Emoji</p>
+                    <div class="grid grid-cols-3 gap-3 mb-5">
+                        ${emojis.map(e => `<button onclick="Profile.setEmoji('${e}')" class="text-3xl bg-gray-800 p-2 rounded-xl hover:bg-purple-900 hover:scale-105 transition-transform border border-gray-700">${e}</button>`).join('')}
+                    </div>
+                    <button onclick="Nav.closeModal()" class="w-full bg-gray-800 text-white py-3 rounded-lg font-bold hover:bg-gray-700 border border-gray-600">Tutup</button>
                 </div>
-            `;
-            container.classList.remove('hidden');
+            `);
         },
-        selectAvatar: (avatar) => {
-            game.player.avatar = avatar;
-            UI.updateHeader();
-            Profile.render();
-            Profile.closeModal();
-            Utils.toast("Avatar diganti!");
-        },
-        closeModal: () => {
-            document.getElementById('modal-container').classList.add('hidden');
+        setEmoji: (e) => { game.player.avatarEmoji = e; game.player.customAvatar = null; UI.updateHeader(); Profile.render(); Nav.closeModal(); Utils.toast("Avatar Diperbarui!"); },
+        handleImgUpload: (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const cvs = document.getElementById('img-canvas');
+                    const ctx = cvs.getContext('2d');
+                    const size = 150; cvs.width = size; cvs.height = size;
+                    
+                    const min = Math.min(img.width, img.height);
+                    const sx = (img.width - min) / 2, sy = (img.height - min) / 2;
+                    ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
+                    
+                    game.player.customAvatar = cvs.toDataURL('image/jpeg', 0.8);
+                    game.player.avatarEmoji = null;
+                    UI.updateHeader(); Profile.render(); Nav.closeModal();
+                    Utils.toast("Foto Profil Berhasil Diupload!");
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
         }
     };
 
-    // --- FARM SYSTEM ---
+    const Settings = {
+        save: () => localStorage.setItem(SAVE_KEY, JSON.stringify(game)),
+        load: () => {
+            const d = localStorage.getItem(SAVE_KEY);
+            if(d) {
+                try {
+                    const p = JSON.parse(d);
+                    game = { ...DEFAULT_STATE, ...p };
+                    game.player = { ...DEFAULT_STATE.player, ...p.player };
+                    game.rank = { ...DEFAULT_STATE.rank, ...p.rank };
+                    game.farm = { ...DEFAULT_STATE.farm, ...p.farm };
+                    game.equip = { ...DEFAULT_STATE.equip, ...p.equip };
+                    game.inv = { w: { ...DEFAULT_STATE.inv.w, ...(p.inv?.w||{}) }, a: { ...DEFAULT_STATE.inv.a, ...(p.inv?.a||{}) } };
+                } catch(e){}
+            }
+        },
+        exportSave: () => {
+            Settings.save(); // ensure latest
+            const b = new Blob([JSON.stringify(game)], {type:"text/plain"});
+            const u = URL.createObjectURL(b);
+            const a = document.createElement('a'); a.href = u; a.download = `RealmSave_${game.player.name}.txt`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u);
+            Utils.toast("File Save Berhasil Didownload! Simpan baik-baik.");
+        },
+        handleFile: (e) => {
+            const f = e.target.files[0]; if(!f) return;
+            const r = new FileReader();
+            r.onload = (ev) => { window._tempSave = ev.target.result; };
+            r.readAsText(f);
+        },
+        importSave: () => {
+            if(!window._tempSave) return Utils.toast("Pilih file .txt terlebih dahulu!");
+            try {
+                const p = JSON.parse(window._tempSave);
+                if(p.player && p.farm && p.equip) {
+                    game = p; Settings.save(); 
+                    Utils.toast("Data Berhasil Dipulihkan! Merefresh...");
+                    setTimeout(() => location.reload(), 1000);
+                } else throw new Error();
+            } catch(e) { Utils.toast("Gagal! File Save Rusak / Tidak Valid."); }
+        },
+        resetGamePrompt: () => {
+            Nav.modal(`
+                <div class="glass-card p-6 w-full max-w-sm text-center border-red-600 border bg-gray-900">
+                    <h3 class="font-black text-2xl text-red-500 mb-2">HAPUS DATA?</h3>
+                    <p class="text-gray-300 mb-6 text-sm">Tindakan ini permanen. Semua Koin, Diamond, Rank, dan Equipment akan lenyap selamanya. Yakin?</p>
+                    <div class="flex gap-2">
+                        <button onclick="Nav.closeModal()" class="flex-1 bg-gray-700 text-white py-3 rounded-lg font-bold hover:bg-gray-600">Batal</button>
+                        <button onclick="localStorage.removeItem('${SAVE_KEY}'); location.reload();" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-bold shadow-lg">YA, HAPUS</button>
+                    </div>
+                </div>
+            `);
+        }
+    };
+
+    // ==========================================
+    // 5. PVZ FARMING SYSTEM
+    // ==========================================
     const Farm = {
         init: () => {
-            Farm.renderSeedSelector();
-            Farm.renderGrid();
-            if (farmInterval) clearInterval(farmInterval);
-            farmInterval = setInterval(Farm.updateLoop, 200);
+            Farm.renderSeeds(); Farm.renderGrid();
+            if(!loops.farm) loops.farm = setInterval(Farm.loop, 500);
         },
-        renderSeedSelector: () => {
-            const container = document.getElementById('seed-selector');
-            container.innerHTML = '';
-            Object.keys(CROPS_DB).forEach(key => {
-                const c = CROPS_DB[key];
-                const isSelected = game.farm.selectedSeed === key;
-                const btn = document.createElement('button');
-                btn.className = `flex-shrink-0 px-3 py-1.5 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all ${isSelected ? 'bg-purple-900/80 border-purple-400 text-white' : 'bg-gray-900/80 border-gray-800 text-gray-400'}`;
-                btn.innerHTML = `<span>${c.icon}</span> <span>${c.name}</span>`;
-                btn.onclick = () => {
-                    game.farm.selectedSeed = key;
-                    Farm.renderSeedSelector();
-                };
-                container.appendChild(btn);
+        renderSeeds: () => {
+            const c = document.getElementById('seed-selector'); c.innerHTML = '';
+            Object.keys(CROPS).forEach(k => {
+                const isSel = game.farm.seed === k;
+                const cr = CROPS[k];
+                c.innerHTML += `<button onclick="game.farm.seed='${k}'; Farm.renderSeeds();" class="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-bold border-2 transition-all shadow-md ${isSel ? 'border-purple-500 bg-purple-900/50 text-white scale-105' : 'border-gray-800 bg-gray-900 text-gray-500'}">
+                    ${cr.icon} ${cr.name} <span class="text-[10px] block font-normal opacity-80 mt-0.5">${cr.seedCost}🪙</span>
+                </button>`;
             });
         },
         renderGrid: () => {
-            const grid = document.getElementById('farm-grid');
-            grid.innerHTML = '';
+            const g = document.getElementById('farm-grid'); g.innerHTML = '';
+            for(let i=0; i<12; i++) {
+                const isUnl = i < game.farm.unlocked;
+                g.innerHTML += `<div id="plot-${i}" class="farm-plot ${!isUnl ? 'locked' : ''}" onclick="Farm.interact(${i})"></div>`;
+                if(isUnl) Farm.updatePlotUI(i);
+                else document.getElementById(`plot-${i}`).innerHTML = '🔒';
+            }
+        },
+        interact: (i) => {
+            if(i >= game.farm.unlocked) return Farm.openExpandModal();
+            const p = game.farm.plots[i]; const now = Date.now();
             
-            for (let i = 0; i < 12; i++) {
-                const isUnlocked = i < game.farm.unlockedPlots;
-                const el = document.createElement('div');
-                el.id = 'plot-' + i;
+            if(p.s === 'empty') {
+                const c = CROPS[game.farm.seed];
+                if(game.player.coins < c.seedCost) return Utils.toast("Koin tidak cukup beli bibit!");
+                Utils.addCoins(-c.seedCost);
+                p.s = 'planted'; p.t = game.farm.seed;
+                Utils.toast("Bibit ditanam! Jangan lupa disiram💧");
+            } 
+            else if(p.s === 'planted') {
+                p.s = 'grow1'; p.end = now + CROPS[p.t].time1; p.dur = CROPS[p.t].time1;
+                Utils.floatTxt("💧", `plot-${i}`, 'text-blue-400');
+            }
+            else if(p.s === 'need_fert') {
+                p.s = 'grow2'; p.end = now + CROPS[p.t].time2; p.dur = CROPS[p.t].time2;
+                Utils.floatTxt("💩", `plot-${i}`, 'text-amber-700');
+            }
+            else if(p.s === 'ready') {
+                const c = CROPS[p.t];
+                if(c.yield === 'coins') { Utils.addCoins(c.coins); Utils.toast(`Panen sukses! +${c.coins}🪙`); }
+                else { Utils.addDiam(c.diam); Utils.toast(`Panen Spesial! +${c.diam}💎`); }
+                Utils.addXp(10);
+                p.s = 'empty'; p.t = null;
+            }
+            Farm.updatePlotUI(i);
+        },
+        loop: () => {
+            const now = Date.now();
+            for(let i=0; i<game.farm.unlocked; i++) {
+                const p = game.farm.plots[i];
+                if(p.s === 'grow1' && now >= p.end) { p.s = 'need_fert'; Farm.updatePlotUI(i); }
+                else if(p.s === 'grow2' && now >= p.end) { p.s = 'ready'; Farm.updatePlotUI(i); }
+                else if(p.s === 'grow1' || p.s === 'grow2') Farm.updatePlotUI(i, now);
+            }
+        },
+        updatePlotUI: (i, now = Date.now()) => {
+            const p = game.farm.plots[i]; const el = document.getElementById(`plot-${i}`);
+            if(!el) return;
+            el.className = 'farm-plot'; el.innerHTML = '';
+            
+            if(p.s === 'empty') el.classList.add('plot-empty');
+            else {
+                const c = CROPS[p.t];
+                el.innerHTML = `<div class="farm-icon">${c.icon}</div>`;
                 
-                if (!isUnlocked) {
-                    el.className = 'farm-plot locked';
-                    el.innerHTML = '🔒';
-                    el.onclick = () => Farm.openExpandModal();
-                } else {
-                    el.className = 'farm-plot';
-                    el.onclick = () => Farm.interactPlot(i);
+                if(p.s === 'planted') {
+                    el.classList.add('plot-needs-water');
+                    el.innerHTML += `<div class="farm-state-icon text-blue-400 animate-bounce">💧</div>`;
                 }
-                grid.appendChild(el);
-            }
-            Farm.updateLoop();
-        },
-        render: () => {
-            Farm.renderSeedSelector();
-            Farm.renderGrid();
-        },
-        interactPlot: (index) => {
-            const plot = game.farm.plots[index];
-            const now = Date.now();
-
-            if (plot.state === 'empty') {
-                const cropKey = game.farm.selectedSeed;
-                const crop = CROPS_DB[cropKey];
-
-                // Check cost
-                if (crop.currency === 'coins' && game.player.coins < crop.seedPrice) {
-                    return Utils.toast(`Koin tidak cukup! Butuh ${crop.seedPrice}🪙`);
+                else if(p.s === 'need_fert') {
+                    el.classList.add('plot-needs-fert');
+                    el.innerHTML += `<div class="farm-state-icon text-amber-500 animate-bounce">💩</div>`;
                 }
-                if (crop.currency === 'diamonds' && game.player.diamonds < crop.seedPrice) {
-                    return Utils.toast(`Diamond tidak cukup! Butuh ${crop.seedPrice}💎`);
+                else if(p.s === 'grow1' || p.s === 'grow2') {
+                    el.classList.add(p.s === 'grow1' ? 'plot-growing-1' : 'plot-growing-2');
+                    let pct = Math.min(100, Math.max(0, 100 - ((p.end - now) / p.dur)*100));
+                    el.innerHTML += `<div class="farm-progress-bar" style="transform: scaleY(${pct/100})"></div>`;
                 }
-
-                // Deduct cost
-                if (crop.currency === 'coins') Utils.addCoins(-crop.seedPrice);
-                else Utils.addDiamonds(-crop.seedPrice);
-
-                plot.state = 'growing';
-                plot.cropType = cropKey;
-                plot.readyTime = now + crop.time;
-
-                Utils.toast(`Tanam ${crop.name}`);
-            } else if (plot.state === 'ready') {
-                const crop = CROPS_DB[plot.cropType];
-                plot.state = 'empty';
-                plot.cropType = null;
-                plot.readyTime = 0;
-
-                // Yield
-                Utils.addCoins(crop.coins);
-                Utils.addXp(crop.xp);
-                game.player.stats.cropsHarvested++;
-
-                let msg = `Panen ${crop.name}! +${crop.coins}🪙 +${crop.xp}XP`;
-
-                // Diamond Drop Chance
-                if (crop.diamondChance > 0 && Math.random() < crop.diamondChance) {
-                    Utils.addDiamonds(1);
-                    msg += " +1💎";
-                }
-
-                Utils.toast(msg);
-            }
-            Farm.updatePlotVisual(index);
-        },
-        updateLoop: () => {
-            const now = Date.now();
-            for (let i = 0; i < game.farm.unlockedPlots; i++) {
-                const plot = game.farm.plots[i];
-                if (plot.state === 'growing') {
-                    if (now >= plot.readyTime) {
-                        plot.state = 'ready';
-                    }
-                    Farm.updatePlotVisual(i, now);
+                else if(p.s === 'ready') {
+                    el.classList.add('plot-ready', 'animate-pop');
+                    el.innerHTML += `<div class="farm-state-icon text-green-400 animate-pulse bg-transparent text-2xl">✨</div>`;
                 }
             }
-        },
-        updatePlotVisual: (index, now = Date.now()) => {
-            const plot = game.farm.plots[index];
-            const el = document.getElementById('plot-' + index);
-            if (!el || index >= game.farm.unlockedPlots) return;
-
-            el.className = 'farm-plot';
-            el.innerHTML = '';
-
-            if (plot.state === 'empty') {
-                // Empty brown soil
-            } else if (plot.state === 'growing') {
-                const crop = CROPS_DB[plot.cropType];
-                el.classList.add('growing');
-                el.innerHTML = crop.icon;
-                const total = crop.time;
-                const remaining = Math.max(0, plot.readyTime - now);
-                const progress = ((total - remaining) / total) * 100;
-                el.style.setProperty('--progress', `${progress}%`);
-            } else if (plot.state === 'ready') {
-                const crop = CROPS_DB[plot.cropType];
-                el.classList.add('ready', 'animate-pop');
-                el.innerHTML = crop.icon;
-            }
-        },
-        getExpandCost: () => {
-            // Plot costs scale
-            const nextPlot = game.farm.unlockedPlots + 1;
-            return (nextPlot - 4) * 20; // 20, 40, 60, 80, 100, 120, 140, 160
         },
         openExpandModal: () => {
-            if (game.farm.unlockedPlots >= 12) {
-                return Utils.toast("Lahan pertanianmu sudah maksimal (12 Plot)!");
-            }
-            const cost = Farm.getExpandCost();
-            const container = document.getElementById('modal-container');
-            container.innerHTML = `
-                <div class="glass-card p-5 w-full max-w-xs animate-pop text-center">
-                    <h3 class="font-bold text-sm text-purple-300 mb-2">➕ Perluas Lahan Pertanian</h3>
-                    <p class="text-xs text-gray-400 mb-4">Buka Plot Lahan ke-${game.farm.unlockedPlots + 1} seharga <span class="text-cyan-300 font-bold">${cost} 💎 Diamond</span>?</p>
+            const n = game.farm.unlocked; if(n >= 12) return Utils.toast("Lahan sudah maksimal (12 Plot)!");
+            const cost = (n-3) * 100; // 100, 200, 300 diamonds
+            Nav.modal(`
+                <div class="glass-card p-6 w-full max-w-sm text-center bg-gray-900 border border-gray-700">
+                    <h3 class="font-bold text-xl text-purple-300 mb-2">Buka Lahan Baru</h3>
+                    <p class="text-sm text-gray-400 mb-6">Perluas lahan ke-${n+1} dengan harga <strong class="text-cyan-300 text-lg ml-1">${cost}💎</strong>?</p>
                     <div class="flex gap-2">
-                        <button onclick="Profile.closeModal()" class="flex-1 bg-gray-800 text-gray-300 py-2 rounded text-xs font-bold">Batal</button>
-                        <button onclick="Farm.buyExpandPlot(${cost})" class="flex-1 btn-purple py-2 rounded text-xs font-bold">Beli Lahan</button>
+                        <button onclick="Nav.closeModal()" class="flex-1 bg-gray-800 text-white py-3 rounded-lg font-bold border border-gray-600 hover:bg-gray-700">Batal</button>
+                        <button onclick="Farm.buyExpand(${cost})" class="flex-1 btn-purple py-3 rounded-lg font-bold shadow-lg">Beli</button>
                     </div>
                 </div>
-            `;
-            container.classList.remove('hidden');
+            `);
         },
-        buyExpandPlot: (cost) => {
-            if (game.player.diamonds < cost) {
-                Profile.closeModal();
-                return Utils.toast("Diamond kamu tidak cukup!");
-            }
-            Utils.addDiamonds(-cost);
-            game.farm.unlockedPlots++;
-            Farm.renderGrid();
-            Profile.closeModal();
-            Utils.toast(`Lahan diperluas menjadi ${game.farm.unlockedPlots} Plot!`);
+        buyExpand: (cost) => {
+            if(game.player.diamonds < cost) { Nav.closeModal(); return Utils.toast("Diamond kamu kurang!"); }
+            Utils.addDiam(-cost); game.farm.unlocked++; Farm.renderGrid(); Nav.closeModal(); Utils.toast("Lahan berhasil diperluas!");
         }
     };
 
-    // --- COMBAT SYSTEM ---
+    // ==========================================
+    // 6. COMBAT (PVE & RANKED)
+    // ==========================================
     const Combat = {
-        activeDungeon: null,
-        enemy: null,
-        playerHp: 100,
-        playerMaxHp: 100,
-
-        renderDungeonList: () => {
-            const container = document.getElementById('dungeon-list');
-            container.innerHTML = '';
-            
-            DUNGEONS_DB.forEach(d => {
-                const isLocked = game.player.level < d.reqLevel;
-                const html = `
-                    <div class="glass-card p-3.5 flex items-center justify-between border ${isLocked ? 'border-gray-800 opacity-60' : 'border-purple-500/30'}">
-                        <div class="flex items-center gap-3">
-                            <div class="text-3xl bg-purple-900/40 p-2.5 rounded-xl">${d.icon}</div>
+        state: { mode: 'pve', enemy: null, php: 0, pmax: 0, dungeonId: null },
+        
+        renderList: () => {
+            const c = document.getElementById('dungeon-list'); c.innerHTML = '';
+            DUNGEONS.forEach((d) => {
+                c.innerHTML += `
+                    <div class="glass-card p-4 flex justify-between items-center border ${d.isBoss?'border-red-900/50 bg-red-950/20':'border-gray-800 bg-gray-900'}">
+                        <div class="flex items-center gap-4">
+                            <div class="text-4xl bg-black/50 p-2 rounded-xl shadow-inner border border-gray-800">${d.icon}</div>
                             <div>
-                                <div class="flex items-center gap-2">
-                                    <h3 class="font-bold text-sm text-white">${d.name}</h3>
-                                    ${isLocked ? `<span class="text-[9px] bg-red-900/80 text-red-300 px-1.5 py-0.5 rounded">Lvl ${d.reqLevel}</span>` : ''}
-                                </div>
-                                <p class="text-[11px] text-gray-400">${d.desc}</p>
+                                <h4 class="font-bold text-white ${d.isBoss?'text-red-400 tracking-wide':''}">${d.name}</h4>
+                                <div class="text-xs text-gray-500 font-bold uppercase mt-1">${d.enemies.length} Monster</div>
                             </div>
                         </div>
-                        <button ${isLocked ? 'disabled' : ''} onclick="Combat.startDungeon('${d.id}')" class="btn-purple px-3.5 py-2 rounded-lg text-xs font-bold flex-shrink-0">
-                            Masuk
-                        </button>
-                    </div>
-                `;
-                container.innerHTML += html;
+                        <button onclick="Combat.startPVE('${d.id}')" class="${d.isBoss?'bg-red-700 hover:bg-red-600':'btn-purple'} px-5 py-2.5 rounded-xl font-bold shadow-md">Masuk</button>
+                    </div>`;
             });
         },
-        startDungeon: (dungeonId) => {
-            const dungeon = DUNGEONS_DB.find(d => d.id === dungeonId);
-            if (!dungeon) return;
-
-            Combat.activeDungeon = dungeon;
-            const stats = Utils.getCalculatedStats();
-            Combat.playerMaxHp = stats.maxHp;
-            Combat.playerHp = stats.maxHp;
-
-            document.getElementById('combat-select-screen').classList.add('hidden');
-            document.getElementById('combat-battle-screen').classList.remove('hidden');
-            document.getElementById('battle-stage-title').innerText = dungeon.name;
-
-            Combat.spawnEnemy();
-            Combat.logClear();
-            Combat.log(`Memasuki ${dungeon.name}...`);
-        },
-        spawnEnemy: () => {
-            const enemies = Combat.activeDungeon.enemies;
-            const template = enemies[Math.floor(Math.random() * enemies.length)];
+        startPVE: (id) => {
+            const d = DUNGEONS.find(x => x.id === id);
+            Combat.state.mode = 'pve'; Combat.state.dungeonId = id;
+            const tmpl = d.enemies[Math.floor(Math.random() * d.enemies.length)];
+            Combat.state.enemy = { ...tmpl, maxHp: tmpl.h, hp: tmpl.h };
             
-            Combat.enemy = {
-                ...template,
-                maxHp: template.hp,
-                hp: template.hp
-            };
+            document.getElementById('pve-select').classList.add('hidden');
+            document.getElementById('pve-battle').classList.remove('hidden');
+            document.getElementById('pve-post-battle').classList.add('hidden');
+            document.getElementById('battle-title').innerText = d.name;
+            
+            Combat.initBattle();
+        },
+        startPVP: (enemyStats) => {
+            Combat.state.mode = 'pvp';
+            Combat.state.enemy = { n: "Shadow AI", s: "🥷", maxHp: enemyStats.hp, hp: enemyStats.hp, a: enemyStats.atk, d: enemyStats.def, pvp: true };
+            
+            document.getElementById('tab-ranked').classList.remove('active');
+            document.getElementById('tab-combat').classList.add('active');
+            document.getElementById('pve-select').classList.add('hidden');
+            document.getElementById('pve-battle').classList.remove('hidden');
+            document.getElementById('pve-post-battle').classList.add('hidden');
+            document.getElementById('battle-title').innerText = "Arena Ranked PVP";
+            
+            Combat.initBattle();
+        },
+        initBattle: () => {
+            const s = Utils.calcStats();
+            Combat.state.pmax = s.hp; Combat.state.php = s.hp;
+            Utils.toast(`Pertarungan dimulai! Lawan: ${Combat.state.enemy.n}`);
             Combat.updateUI();
         },
         updateUI: () => {
-            const stats = Utils.getCalculatedStats();
-            document.getElementById('battle-player-name').innerText = game.player.name;
-            document.getElementById('battle-player-atk').innerText = stats.atk;
+            const s = Utils.calcStats();
+            document.getElementById('pve-player-name').innerText = game.player.name;
+            document.getElementById('pve-player-atk').innerText = `⚔️${s.atk}`;
+            
+            let ppct = Math.max(0, (Combat.state.php / Combat.state.pmax)*100);
+            document.getElementById('player-hp-bar').style.width = ppct+'%';
+            document.getElementById('player-hp-txt').innerText = `${Math.floor(Combat.state.php)}/${Combat.state.pmax}`;
 
-            // Player HP
-            const pPct = Math.max(0, (Combat.playerHp / Combat.playerMaxHp) * 100);
-            document.getElementById('player-hp-bar').style.width = pPct + '%';
-            document.getElementById('player-hp-text').innerText = `${Math.max(0, Combat.playerHp)}/${Combat.playerMaxHp}`;
-
-            // Enemy HP
-            if (Combat.enemy) {
-                document.getElementById('enemy-name').innerText = Combat.enemy.name;
-                document.getElementById('enemy-sprite').innerText = Combat.enemy.sprite;
-                const ePct = Math.max(0, (Combat.enemy.hp / Combat.enemy.maxHp) * 100);
-                document.getElementById('enemy-hp-bar').style.width = ePct + '%';
-                document.getElementById('enemy-hp-text').innerText = `${Math.max(0, Combat.enemy.hp)}/${Combat.enemy.maxHp}`;
-            }
-
-            document.getElementById('potion-btn-count').innerText = `${game.player.potions}x Left`;
+            const e = Combat.state.enemy;
+            document.getElementById('enemy-name').innerText = e.n;
+            document.getElementById('enemy-sprite').innerText = e.s;
+            let epct = Math.max(0, (e.hp / e.maxHp)*100);
+            document.getElementById('enemy-hp-bar').style.width = epct+'%';
+            document.getElementById('enemy-hp-txt').innerText = `${Math.floor(e.hp)}/${e.maxHp}`;
+            
+            document.getElementById('pve-pot-txt').innerText = `${game.player.potions}x`;
         },
-        playerAttack: (multiplier = 1, isSkill = false) => {
-            if (!Combat.enemy || Combat.playerHp <= 0) return;
+        action: (type) => {
+            if(Combat.state.php <= 0 || Combat.state.enemy.hp <= 0) return;
+            const s = Utils.calcStats(); const e = Combat.state.enemy;
 
-            const stats = Utils.getCalculatedStats();
-            let isCrit = isSkill || (Math.random() * 100 < stats.crit);
-            let dmg = Math.max(1, Math.floor((stats.atk * multiplier) - (Combat.enemy.def * 0.3)));
-            if (isCrit) dmg = Math.floor(dmg * 1.8);
-
-            Combat.enemy.hp -= dmg;
-
-            // Lifesteal
-            if (stats.lifesteal > 0) {
-                const healAmt = Math.floor(dmg * (stats.lifesteal / 100));
-                Combat.playerHp = Math.min(Combat.playerMaxHp, Combat.playerHp + healAmt);
-                if (healAmt > 0) Combat.log(`Mengisap +${healAmt} HP musuh!`);
-            }
-
-            // Visual Shake & Floating Text
-            const eBox = document.getElementById('enemy-box');
-            eBox.classList.remove('animate-hit');
-            void eBox.offsetWidth;
-            eBox.classList.add('animate-hit');
-            Utils.floatingText(`-${dmg}${isCrit ? ' CRIT!' : ''}`, 'enemy-box', isCrit ? 'text-yellow-400' : 'text-red-400');
-
-            Combat.log(`Kamu menyerang ${Combat.enemy.name} sebesar ${dmg} Dmg.`);
-
-            if (Combat.enemy.hp <= 0) {
-                Combat.winBattle();
-            } else {
+            if(type === 'heal') {
+                if(game.player.potions <= 0) return Utils.toast("Potion Habis!");
+                game.player.potions--;
+                let heal = Math.floor(s.hp * 0.4);
+                Combat.state.php = Math.min(s.hp, Combat.state.php + heal);
+                Utils.floatTxt(`+${heal}`, 'player-box', 'text-green-400');
+                Combat.updateUI();
                 setTimeout(Combat.enemyTurn, 600);
+                return;
             }
+
+            // Attack Logic
+            let mult = type === 'skill' ? 2 : 1;
+            let isCrit = type === 'skill' || (Math.random()*100 < s.crit);
+            let dmg = Math.floor(Math.max(1, (s.atk * mult) - (e.d * 0.3)));
+            if(isCrit) dmg = Math.floor(dmg * 1.5);
+
+            // VANITAS ONE SHOT LOGIC
+            if(s.isVanitas && e.boss) {
+                dmg = e.maxHp; 
+                Utils.toast("🔫 Kematian Mutlak! INSTAKILL.");
+                Utils.floatTxt("INSTAKILL!", 'enemy-box', 'text-red-600 text-3xl font-black');
+            }
+
+            e.hp -= dmg;
+            Utils.floatTxt(`-${dmg}${isCrit?'!':''}`, 'enemy-box', isCrit?'text-yellow-400 text-2xl':'text-white');
+            document.getElementById('enemy-sprite').parentElement.classList.add('animate-hit');
+            setTimeout(()=>document.getElementById('enemy-sprite').parentElement.classList.remove('animate-hit'), 350);
+
+            if(s.life > 0 && e.hp > 0) {
+                let ls = Math.floor(dmg * (s.life/100));
+                Combat.state.php = Math.min(s.hp, Combat.state.php + ls);
+                Utils.floatTxt(`+${ls}`, 'player-box', 'text-purple-400');
+            }
+
             Combat.updateUI();
-        },
-        playerSkill: () => {
-            Combat.playerAttack(2.0, true);
-        },
-        usePotion: () => {
-            if (game.player.potions <= 0) return Utils.toast("Potion HP kamu habis!");
-            game.player.potions--;
-            
-            const healAmt = Math.floor(Combat.playerMaxHp * 0.5); // Heals 50% Max HP
-            Combat.playerHp = Math.min(Combat.playerMaxHp, Combat.playerHp + healAmt);
-            
-            Utils.floatingText(`+${healAmt} HP`, 'player-box', 'text-green-400');
-            Combat.log(`Menggunakan Potion! +${healAmt} HP.`);
-            Combat.updateUI();
-            
-            setTimeout(Combat.enemyTurn, 600);
+
+            if(e.hp <= 0) setTimeout(Combat.win, 500);
+            else setTimeout(Combat.enemyTurn, 800);
         },
         enemyTurn: () => {
-            if (!Combat.enemy || Combat.enemy.hp <= 0) return;
-
-            const stats = Utils.getCalculatedStats();
-            const dmg = Math.max(1, Combat.enemy.atk - Math.floor(stats.def * 0.5));
-            Combat.playerHp -= dmg;
-
-            const pBox = document.getElementById('player-box');
-            pBox.classList.remove('animate-hit');
-            void pBox.offsetWidth;
-            pBox.classList.add('animate-hit');
-            Utils.floatingText(`-${dmg}`, 'player-box', 'text-red-500');
-
-            Combat.log(`${Combat.enemy.name} menyerang kamu sebesar ${dmg} Dmg.`);
-
-            if (Combat.playerHp <= 0) {
-                Combat.log("Kamu dikalahkan! Kembali ke desa...");
-                setTimeout(() => {
-                    Combat.flee();
-                    Utils.toast("Kamu pingsan dan kembali ke desa.");
-                }, 1200);
-            }
-            Combat.updateUI();
-        },
-        winBattle: () => {
-            game.player.stats.battlesWon++;
-            const e = Combat.enemy;
+            const s = Utils.calcStats(); const e = Combat.state.enemy;
+            let dmg = Math.max(1, e.a - Math.floor(s.def * 0.5));
+            Combat.state.php -= dmg;
             
-            let winCoins = e.coins + Math.floor(Math.random() * 10);
-            let winXp = e.xp;
-            let winDiamonds = e.diamondGuaranteed || 0;
-
-            if (e.diamondChance && Math.random() < e.diamondChance) {
-                winDiamonds += 1;
+            Utils.floatTxt(`-${dmg}`, 'player-box', 'text-red-500');
+            document.getElementById('player-box').classList.add('animate-hit');
+            setTimeout(()=>document.getElementById('player-box').classList.remove('animate-hit'), 350);
+            
+            Combat.updateUI();
+            if(Combat.state.php <= 0) setTimeout(Combat.lose, 500);
+        },
+        win: () => {
+            const e = Combat.state.enemy;
+            if(Combat.state.mode === 'pve') {
+                Utils.addCoins(e.c); Utils.addXp(e.xp);
+                let msg = `Menang! +${e.c}🪙 +${e.xp}XP`;
+                if(e.diam) { Utils.addDiam(e.diam); msg += ` +${e.diam}💎`; }
+                Utils.toast(msg);
+                
+                // Show Continuous PVE UI Overlay
+                document.getElementById('pve-post-battle').classList.remove('hidden');
+            } else {
+                Ranked.winMatch();
             }
-
-            Utils.addCoins(winCoins);
-            Utils.addXp(winXp);
-            if (winDiamonds > 0) Utils.addDiamonds(winDiamonds);
-
-            let msg = `Menang! +${winCoins}🪙 +${winXp}XP`;
-            if (winDiamonds > 0) msg += ` +${winDiamonds}💎`;
-
-            Combat.log(`🎉 ${msg}`);
-            Utils.toast(msg);
-
-            setTimeout(() => {
-                Combat.spawnEnemy();
-            }, 1000);
+        },
+        nextPVE: () => {
+            document.getElementById('pve-post-battle').classList.add('hidden');
+            const d = DUNGEONS.find(x => x.id === Combat.state.dungeonId);
+            const tmpl = d.enemies[Math.floor(Math.random() * d.enemies.length)];
+            Combat.state.enemy = { ...tmpl, maxHp: tmpl.h, hp: tmpl.h };
+            // Optional: Player heals slightly per win? Or rely on lifesteal/potions. Rely on lifesteal.
+            Combat.updateUI();
+            Utils.toast(`Muncul ${Combat.state.enemy.n}! Siap Bertarung!`);
+        },
+        lose: () => {
+            Utils.toast("💀 Kamu Dikalahkan!");
+            if(Combat.state.mode === 'pvp') setTimeout(Ranked.loseMatch, 1500);
+            else setTimeout(Combat.flee, 1500);
         },
         flee: () => {
-            document.getElementById('combat-battle-screen').classList.add('hidden');
-            document.getElementById('combat-select-screen').classList.remove('hidden');
-        },
-        log: (txt) => {
-            const box = document.getElementById('battle-log');
-            const p = document.createElement('p');
-            p.innerText = '• ' + txt;
-            box.appendChild(p);
-            box.scrollTop = box.scrollHeight;
-        },
-        logClear: () => {
-            document.getElementById('battle-log').innerHTML = '';
+            document.getElementById('pve-battle').classList.add('hidden');
+            document.getElementById('pve-post-battle').classList.add('hidden');
+            if(Combat.state.mode === 'pvp') { Nav.switchTab('ranked'); }
+            else { document.getElementById('pve-select').classList.remove('hidden'); }
         }
     };
 
-    // --- SHOP SYSTEM ---
-    const Shop = {
-        activeTab: 'weapons',
-        init: () => {
-            Shop.render();
+    // ==========================================
+    // 7. RANKED PVP AI
+    // ==========================================
+    const Ranked = {
+        render: () => {
+            const r = RANKS[game.rank.index];
+            document.getElementById('rank-name-display').innerText = r.name;
+            
+            let starsHtml = '';
+            for(let i=0; i<Math.min(10, r.req); i++) {
+                if(i < game.rank.stars) starsHtml += '<span class="star-filled">★</span>';
+                else starsHtml += '<span class="star-empty">★</span>';
+            }
+            if(r.req > 10) starsHtml = `<span class="star-filled">★</span> <span class="text-xl text-yellow-400 font-black ml-2 mt-1">x${game.rank.stars}</span>`;
+            document.getElementById('rank-stars-display').innerHTML = starsHtml;
         },
-        switchCategory: (cat) => {
-            Shop.activeTab = cat;
-            ['weapons', 'armors', 'consumables'].forEach(c => {
-                const btn = document.getElementById('shop-tab-' + c);
-                if (c === cat) {
-                    btn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-purple-900 text-white border border-purple-500/50";
-                } else {
-                    btn.className = "flex-1 py-1.5 text-xs font-bold rounded-lg bg-gray-800 text-gray-400 border border-gray-700";
-                }
+        findMatch: () => {
+            const r = RANKS[game.rank.index];
+            const aiHp = Math.floor(150 * r.m * (1 + Math.random()*0.2));
+            const aiAtk = Math.floor(25 * r.m * (1 + Math.random()*0.1));
+            const aiDef = Math.floor(5 * r.m);
+            Combat.startPVP({hp: aiHp, atk: aiAtk, def: aiDef});
+        },
+        winMatch: () => {
+            Utils.toast("🏆 RANKED WIN! +1 Bintang");
+            game.rank.stars++;
+            const r = RANKS[game.rank.index];
+            if(game.rank.stars >= r.req && game.rank.index < RANKS.length-1) {
+                game.rank.index++; game.rank.stars = 0;
+                Utils.toast(`🎉 NAIK RANK KE ${RANKS[game.rank.index].name}!`);
+            }
+            UI.updateHeader(); Ranked.render(); Combat.flee();
+        },
+        loseMatch: () => {
+            Utils.toast("📉 RANKED LOSE! -1 Bintang");
+            if(game.rank.stars > 0) game.rank.stars--;
+            else if(game.rank.index > 0) {
+                game.rank.index--; game.rank.stars = RANKS[game.rank.index].req - 1;
+                Utils.toast(`⚠️ TURUN RANK KE ${RANKS[game.rank.index].name}`);
+            }
+            UI.updateHeader(); Ranked.render(); Combat.flee();
+        }
+    };
+
+    // ==========================================
+    // 8. SHOP & FORGE
+    // ==========================================
+    const Shop = {
+        tab: 'weapons',
+        switchTab: (t) => {
+            Shop.tab = t;
+            ['weapons','armors','items'].forEach(id => {
+                document.getElementById('st-'+id).className = id===t ? 'flex-1 py-2.5 px-4 text-sm font-bold rounded-lg bg-purple-600 text-white flex-shrink-0 shadow-md' : 'flex-1 py-2.5 px-4 text-sm font-bold rounded-lg bg-gray-800 text-gray-400 flex-shrink-0 border border-gray-700';
             });
             Shop.render();
         },
         render: () => {
-            const container = document.getElementById('shop-items-container');
-            container.innerHTML = '';
+            const c = document.getElementById('shop-list'); c.innerHTML = '';
+            if(Shop.tab === 'items') {
+                c.innerHTML = `
+                    <div class="glass-card border border-purple-900/50 p-6 bg-gray-900">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="text-5xl bg-black/50 p-3 rounded-2xl border border-gray-800 shadow-inner">🧪</div>
+                            <div><h3 class="font-black text-white text-xl">Healing Potion</h3><p class="text-sm text-gray-400 mt-1">Memulihkan 40% Max HP.<br>Harga: 50🪙 / pcs</p></div>
+                        </div>
+                        <div class="flex gap-4 items-center mb-6">
+                            <input type="range" id="pot-slide" min="1" max="100" value="1" class="flex-1 accent-purple-500 h-2 bg-gray-800 rounded-lg appearance-none cursor-pointer" oninput="Shop.syncPot(this.value)">
+                            <input type="number" id="pot-num" min="1" max="100" value="1" class="w-16 bg-black border border-gray-700 text-center rounded-lg py-2 outline-none text-white font-bold" oninput="Shop.syncPot(this.value)">
+                        </div>
+                        <button onclick="Shop.buyPot()" class="w-full btn-purple py-4 rounded-xl font-black text-lg tracking-wide shadow-lg">Beli Potion</button>
+                    </div>`;
+                return;
+            }
 
-            if (Shop.activeTab === 'weapons') {
-                Object.keys(WEAPONS_DB).forEach(key => {
-                    const item = WEAPONS_DB[key];
-                    const isOwned = game.inventory.includes(key);
-                    const isEquipped = game.equipment.weapon === key;
-                    container.appendChild(Shop.createItemCard(key, item, isOwned, isEquipped, 'weapon'));
-                });
-            } else if (Shop.activeTab === 'armors') {
-                Object.keys(ARMORS_DB).forEach(key => {
-                    const item = ARMORS_DB[key];
-                    const isOwned = game.inventory.includes(key);
-                    const isEquipped = game.equipment.armor === key;
-                    container.appendChild(Shop.createItemCard(key, item, isOwned, isEquipped, 'armor'));
-                });
-            } else if (Shop.activeTab === 'consumables') {
-                // Potions
-                const potCard = document.createElement('div');
-                potCard.className = "glass-card p-3.5 flex items-center justify-between";
-                potCard.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div class="text-3xl bg-pink-900/30 p-2 rounded-xl">🧪</div>
+            const db = Shop.tab === 'weapons' ? WEAPONS : ARMORS;
+            const inv = Shop.tab === 'weapons' ? game.inv.w : game.inv.a;
+            const eqId = Shop.tab === 'weapons' ? game.equip.w : game.equip.a;
+
+            Object.keys(db).forEach(k => {
+                const i = db[k]; const isOwned = !!inv[k]; const isEq = eqId === k;
+                const curr = i.currency === 'diamonds' ? '💎' : '🪙';
+                const tier = TIERS[i.tier];
+                
+                let btn = '';
+                if(isEq) btn = `<button disabled class="w-full bg-purple-900/30 text-purple-400 py-3 rounded-xl font-bold mt-4 border border-purple-500/30 cursor-not-allowed">Digunakan</button>`;
+                else if(isOwned) btn = `<button onclick="Shop.equip('${Shop.tab}','${k}')" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold mt-4 shadow-md">Pakai Sekarang</button>`;
+                else btn = `<button onclick="Shop.confirmBuy('${Shop.tab}','${k}')" class="w-full btn-purple py-3 rounded-xl font-bold mt-4 flex justify-between px-5 shadow-lg"><span>Beli</span><span>${i.price}${curr}</span></button>`;
+
+                let stats = '';
+                if(i.baseAtk) stats += `ATK +${i.baseAtk} &nbsp;`;
+                if(i.baseHp) stats += `HP +${i.baseHp} &nbsp;`;
+                if(i.baseDef) stats += `DEF +${i.baseDef} &nbsp;`;
+                
+                // Hide Spoiler in Shop
+                if(i.isVanitas) stats += `<br><span class="text-red-400 font-bold tracking-widest text-xs mt-2 block">💀 Senjata legendaris dengan kekuatan mutlak.</span>`;
+
+                c.innerHTML += `
+                    <div class="glass-card p-5 flex flex-col justify-between ${tier.class} bg-gray-900/80 relative overflow-hidden group">
+                        <div class="absolute -right-6 -bottom-6 text-7xl opacity-5 group-hover:scale-110 transition-transform">${i.icon}</div>
+                        <div class="flex gap-4 relative z-10">
+                            <div class="text-5xl bg-black/60 p-2 rounded-xl border border-gray-800 shadow-inner flex items-center justify-center shrink-0">${i.icon}</div>
+                            <div>
+                                <div class="text-[10px] uppercase font-bold tracking-wider mb-1" style="color:${tier.color}">${tier.name}</div>
+                                <h4 class="font-bold text-white text-lg">${i.name}</h4>
+                                <div class="text-xs text-gray-400 mt-2 leading-relaxed font-mono">${stats}</div>
+                            </div>
+                        </div>
+                        <div class="relative z-10">${btn}</div>
+                    </div>`;
+            });
+        },
+        syncPot: (v) => { document.getElementById('pot-slide').value = v; document.getElementById('pot-num').value = v; },
+        buyPot: () => {
+            let v = parseInt(document.getElementById('pot-num').value);
+            if(isNaN(v) || v<1) return;
+            let cost = v * 50;
+            if(game.player.coins < cost) return Utils.toast("Koin tidak cukup!");
+            
+            Nav.modal(`
+                <div class="glass-card p-6 w-full max-w-sm text-center bg-gray-900 border border-gray-700">
+                    <h3 class="font-bold text-xl text-purple-300 mb-2">Konfirmasi Pembelian</h3>
+                    <p class="text-gray-300 mb-6 text-sm">Beli <strong>${v}x Potion</strong> seharga <strong>${cost}🪙</strong>?</p>
+                    <div class="flex gap-2">
+                        <button onclick="Nav.closeModal()" class="flex-1 bg-gray-800 text-white py-3 rounded-lg font-bold border border-gray-600 hover:bg-gray-700">Batal</button>
+                        <button onclick="Shop.execBuyPot(${v}, ${cost})" class="flex-1 btn-purple py-3 rounded-lg font-bold shadow-lg">Ya, Beli</button>
+                    </div>
+                </div>
+            `);
+        },
+        execBuyPot: (v, cost) => { Utils.addCoins(-cost); game.player.potions += v; Nav.closeModal(); Utils.toast(`Berhasil membeli ${v}x Potion!`); },
+        confirmBuy: (type, id) => {
+            const db = type === 'weapons' ? WEAPONS : ARMORS; const i = db[id];
+            const curr = i.currency === 'diamonds' ? 'diamonds' : 'coins';
+            if(game.player[curr] < i.price) return Utils.toast(`${curr==='diamonds'?'Diamond':'Koin'} kamu tidak cukup!`);
+            
+            Nav.modal(`
+                <div class="glass-card p-6 w-full max-w-sm text-center bg-gray-900 border border-gray-700">
+                    <h3 class="font-bold text-xl text-purple-300 mb-4">Beli Equipment</h3>
+                    <div class="text-5xl mb-3 drop-shadow-lg">${i.icon}</div>
+                    <p class="text-gray-300 mb-6 text-sm">Beli <span class="font-bold text-white">${i.name}</span> seharga <strong class="text-lg text-${curr==='diamonds'?'cyan':'yellow'}-400">${i.price} ${curr==='diamonds'?'💎':'🪙'}</strong>?</p>
+                    <div class="flex gap-2">
+                        <button onclick="Nav.closeModal()" class="flex-1 bg-gray-800 text-white py-3 rounded-lg font-bold border border-gray-600 hover:bg-gray-700">Batal</button>
+                        <button onclick="Shop.execBuy('${type}','${id}','${curr}',${i.price})" class="flex-1 btn-purple py-3 rounded-lg font-bold shadow-lg">Ya, Beli</button>
+                    </div>
+                </div>
+            `);
+        },
+        execBuy: (type, id, curr, price) => {
+            if(curr==='diamonds') Utils.addDiam(-price); else Utils.addCoins(-price);
+            if(type === 'weapons') { game.inv.w[id] = {lvl:1, grd:1}; game.equip.w = id; }
+            else { game.inv.a[id] = {lvl:1, grd:1}; game.equip.a = id; }
+            Shop.render(); Nav.closeModal(); Utils.toast("Item berhasil dibeli & dipakai!");
+        },
+        equip: (type, id) => {
+            if(type === 'weapons') game.equip.w = id; else game.equip.a = id;
+            Shop.render(); Utils.toast("Equipment Berhasil Digunakan!");
+        }
+    };
+
+    const Forge = {
+        render: () => {
+            const c = document.getElementById('forge-list'); c.innerHTML = '';
+            const wId = game.equip.w; const wDb = WEAPONS[wId]; const wDt = game.inv.w[wId];
+            const aId = game.equip.a; const aDb = ARMORS[aId]; const aDt = game.inv.a[aId];
+
+            const renderCard = (type, id, db, dt, name) => {
+                const upLvlCost = dt.lvl * 200;
+                const upGrdCost = dt.grd * 50;
+                const tier = TIERS[db.tier];
+                
+                return `
+                <div class="glass-card p-5 ${tier.class} bg-gray-900/90 relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 text-8xl opacity-5">${db.icon}</div>
+                    <h3 class="font-bold text-gray-500 uppercase text-xs tracking-widest mb-3 border-b border-gray-700 pb-2">${name} Digunakan</h3>
+                    
+                    <div class="flex gap-4 items-center mb-5 relative z-10">
+                        <div class="text-5xl bg-black/60 p-3 rounded-xl border border-gray-800 shadow-inner shrink-0">${db.icon}</div>
                         <div>
-                            <h3 class="font-bold text-sm text-white">Potion HP (50%)</h3>
-                            <p class="text-[11px] text-gray-400">Pulihkan 50% Max HP saat perang.</p>
+                            <div class="text-[10px] uppercase font-bold" style="color:${tier.color}">${tier.name}</div>
+                            <h3 class="font-black text-xl text-white mb-1">${db.name}</h3>
+                            <div class="flex gap-2">
+                                <span class="bg-blue-900/60 text-blue-300 px-2 py-0.5 rounded text-xs font-bold border border-blue-500/30">Level ${dt.lvl}</span>
+                                <span class="bg-yellow-900/60 text-yellow-300 px-2 py-0.5 rounded text-xs font-bold border border-yellow-500/30">Grade ${dt.grd}⭐</span>
+                            </div>
                         </div>
                     </div>
-                    <button onclick="Shop.buyPotion()" class="btn-purple px-3 py-1.5 rounded-lg text-xs font-bold flex flex-col items-center">
-                        <span>Beli</span>
-                        <span class="text-[10px] text-yellow-300 font-normal">30🪙</span>
-                    </button>
-                `;
-                container.appendChild(potCard);
-            }
-        },
-        createItemCard: (key, item, isOwned, isEquipped, slotType) => {
-            const card = document.createElement('div');
-            card.className = `glass-card p-3.5 flex items-center justify-between border ${isEquipped ? 'border-purple-500 bg-purple-950/20' : 'border-gray-800'}`;
-            
-            let statsText = "";
-            if (item.atk) statsText += `+${item.atk} ATK `;
-            if (item.hp) statsText += `+${item.hp} HP `;
-            if (item.def) statsText += `+${item.def} DEF `;
-            if (item.crit) statsText += `+${item.crit}% Crit `;
-            if (item.lifesteal) statsText += `+${item.lifesteal}% Lifesteal `;
-
-            const currIcon = item.currency === 'coins' ? '🪙' : '💎';
-
-            let actionBtn = '';
-            if (isEquipped) {
-                actionBtn = `<span class="bg-purple-900/80 text-purple-200 border border-purple-500/50 px-3 py-1.5 rounded text-xs font-bold">Dipakai</span>`;
-            } else if (isOwned) {
-                actionBtn = `<button onclick="Shop.equipItem('${key}', '${slotType}')" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Pakai</button>`;
-            } else {
-                actionBtn = `<button onclick="Shop.buyItem('${key}', '${slotType}')" class="btn-purple px-3 py-1.5 rounded-lg text-xs font-bold flex flex-col items-center">
-                                <span>Beli</span>
-                                <span class="text-[10px] text-yellow-300 font-normal">${item.price}${currIcon}</span>
-                            </button>`;
-            }
-
-            card.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <div class="text-3xl bg-purple-900/40 p-2 rounded-xl">${item.icon}</div>
-                    <div>
-                        <h3 class="font-bold text-sm text-white">${item.name}</h3>
-                        <div class="text-[10px] text-purple-300 font-semibold">${statsText}</div>
-                        <p class="text-[10px] text-gray-400 mt-0.5">${item.desc}</p>
+                    <div class="grid grid-cols-2 gap-3 relative z-10">
+                        <button onclick="Forge.upLvl('${type}','${id}',${upLvlCost})" class="bg-gray-800 hover:bg-gray-700 py-3 rounded-xl flex flex-col items-center border border-blue-900/50 shadow-md">
+                            <span class="text-xs text-blue-300 font-bold mb-1">Upgrade Level</span>
+                            <span class="text-[11px] text-white bg-black/80 px-3 py-1 rounded-full font-mono">${upLvlCost}🪙</span>
+                        </button>
+                        <button onclick="Forge.upGrd('${type}','${id}',${upGrdCost})" class="bg-gray-800 hover:bg-gray-700 py-3 rounded-xl flex flex-col items-center border border-yellow-900/50 shadow-md">
+                            <span class="text-xs text-yellow-400 font-bold mb-1">Upgrade Grade</span>
+                            <span class="text-[11px] text-white bg-black/80 px-3 py-1 rounded-full font-mono">${upGrdCost}💎</span>
+                        </button>
                     </div>
-                </div>
-                <div>${actionBtn}</div>
-            `;
-            return card;
-        },
-        buyItem: (key, slotType) => {
-            const db = slotType === 'weapon' ? WEAPONS_DB : ARMORS_DB;
-            const item = db[key];
-            
-            if (item.currency === 'coins' && game.player.coins < item.price) return Utils.toast("Koin tidak cukup!");
-            if (item.currency === 'diamonds' && game.player.diamonds < item.price) return Utils.toast("Diamond tidak cukup!");
+                </div>`;
+            };
 
-            if (item.currency === 'coins') Utils.addCoins(-item.price);
-            else Utils.addDiamonds(-item.price);
-
-            game.inventory.push(key);
-            game.equipment[slotType] = key; // Auto equip on buy
-            
-            Utils.toast(`Membeli & Memakai ${item.name}!`);
-            Shop.render();
-            UI.updateHeader();
+            c.innerHTML += renderCard('w', wId, wDb, wDt, 'Senjata');
+            c.innerHTML += renderCard('a', aId, aDb, aDt, 'Armor');
         },
-        equipItem: (key, slotType) => {
-            game.equipment[slotType] = key;
-            Utils.toast(`Memakai ${slotType === 'weapon' ? 'Senjata' : 'Armor'} baru!`);
-            Shop.render();
+        upLvl: (type, id, cost) => {
+            if(game.player.coins < cost) return Utils.toast("Koin kurang untuk Upgrade Level!");
+            Utils.addCoins(-cost);
+            if(type === 'w') game.inv.w[id].lvl++; else game.inv.a[id].lvl++;
+            Forge.render(); Utils.toast("Level Up Berhasil! Base stats meningkat.");
         },
-        buyPotion: () => {
-            if (game.player.coins < 30) return Utils.toast("Koin tidak cukup!");
-            Utils.addCoins(-30);
-            game.player.potions++;
-            Utils.toast("Membeli 1x Potion HP!");
-            UI.updateHeader();
-            Shop.render();
+        upGrd: (type, id, cost) => {
+            let dt = type === 'w' ? game.inv.w[id] : game.inv.a[id];
+            if(dt.grd >= 10) return Utils.toast("Max! Grade Item sudah di batas tertinggi (10).");
+            if(game.player.diamonds < cost) return Utils.toast("Diamond kurang untuk Upgrade Grade!");
+            Utils.addDiam(-cost); dt.grd++;
+            Forge.render(); Utils.toast("✨ Grade Up Berhasil! Item menjadi jauh lebih kuat.");
         }
     };
 
-    // --- CASINO MINI GAMES ---
+    // ==========================================
+    // 9. CASINO
+    // ==========================================
     const Casino = {
-        openGame: (id) => {
+        open: (game) => {
             document.getElementById('casino-menu').classList.add('hidden');
-            ['slots', 'blackjack', 'coinflip'].forEach(g => document.getElementById(`casino-${g}`).classList.add('hidden'));
-            document.getElementById(`casino-${id}`).classList.remove('hidden');
+            document.getElementById('casino-game-view').classList.remove('hidden');
+            const c = document.getElementById('cg-content');
+            
+            if(game === 'slots') {
+                c.innerHTML = `
+                    <div class="glass-card p-6 text-center border border-yellow-600 bg-gray-900 shadow-2xl">
+                        <h3 class="text-3xl font-black text-yellow-400 mb-6 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]">🎰 SUPER SLOTS</h3>
+                        <div class="flex justify-center gap-3 mb-8 bg-black p-5 rounded-xl border-y-4 border-yellow-600 shadow-inner">
+                            <div class="w-20 h-24 bg-gray-900 rounded-lg border-2 border-gray-700 flex items-center justify-center text-5xl overflow-hidden shadow-inner"><span id="sl-1">💎</span></div>
+                            <div class="w-20 h-24 bg-gray-900 rounded-lg border-2 border-gray-700 flex items-center justify-center text-5xl overflow-hidden shadow-inner"><span id="sl-2">💎</span></div>
+                            <div class="w-20 h-24 bg-gray-900 rounded-lg border-2 border-gray-700 flex items-center justify-center text-5xl overflow-hidden shadow-inner"><span id="sl-3">💎</span></div>
+                        </div>
+                        <input type="number" id="sl-bet" class="w-full bg-black border border-gray-700 p-4 rounded-xl text-white font-black text-xl text-center mb-5 outline-none shadow-inner" value="50">
+                        <button id="sl-btn" onclick="Casino.playSlot()" class="w-full btn-purple py-4 rounded-xl font-black text-xl tracking-widest shadow-[0_0_15px_rgba(147,92,216,0.5)]">SPIN (KOIN)</button>
+                    </div>`;
+            } else if(game === 'dice') {
+                c.innerHTML = `
+                    <div class="glass-card p-6 text-center border border-purple-600 bg-gray-900 shadow-2xl">
+                        <h3 class="text-3xl font-black text-purple-400 mb-6 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]">🎲 DICE HIGH/LOW</h3>
+                        <div class="flex justify-center gap-6 mb-6">
+                            <div id="d-1" class="w-24 h-24 bg-white rounded-2xl text-black text-5xl flex items-center justify-center font-black shadow-[inset_0_-4px_0_rgba(0,0,0,0.2)]">3</div>
+                            <div id="d-2" class="w-24 h-24 bg-white rounded-2xl text-black text-5xl flex items-center justify-center font-black shadow-[inset_0_-4px_0_rgba(0,0,0,0.2)]">4</div>
+                        </div>
+                        <div class="text-3xl font-black text-gray-300 mb-8 tracking-widest">= <span id="d-res" class="text-yellow-400 text-5xl ml-2">7</span></div>
+                        
+                        <input type="number" id="d-bet" class="w-full bg-black border border-gray-700 p-4 rounded-xl text-white font-black text-xl text-center mb-5 shadow-inner" value="100">
+                        
+                        <div class="grid grid-cols-3 gap-3">
+                            <button onclick="Casino.playDice('low')" class="bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-black text-sm shadow-md transition-transform active:scale-95">LOW<br>(2-6)<br><span class="text-[10px] bg-black/30 px-2 py-0.5 rounded-full inline-block mt-1">2x Payout</span></button>
+                            <button onclick="Casino.playDice('mid')" class="bg-green-600 hover:bg-green-500 py-4 rounded-xl font-black text-sm shadow-md transition-transform active:scale-95">SEVEN<br>(7)<br><span class="text-[10px] bg-black/30 px-2 py-0.5 rounded-full inline-block mt-1">4x Payout</span></button>
+                            <button onclick="Casino.playDice('high')" class="bg-red-600 hover:bg-red-500 py-4 rounded-xl font-black text-sm shadow-md transition-transform active:scale-95">HIGH<br>(8-12)<br><span class="text-[10px] bg-black/30 px-2 py-0.5 rounded-full inline-block mt-1">2x Payout</span></button>
+                        </div>
+                    </div>`;
+            } else if(game === 'coinflip') {
+                c.innerHTML = `
+                    <div class="glass-card p-6 text-center border border-red-600 bg-gray-900 shadow-2xl">
+                        <h3 class="text-3xl font-black text-red-400 mb-6 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]">🪙 COINFLIP</h3>
+                        <div class="flex justify-center mb-8">
+                            <div id="cf-coin" class="w-32 h-32 bg-yellow-500 rounded-full flex items-center justify-center text-5xl font-black text-yellow-900 border-8 border-yellow-600 shadow-[inset_0_0_10px_rgba(0,0,0,0.5),0_10px_20px_rgba(0,0,0,0.5)] transition-transform duration-500">?</div>
+                        </div>
+                        <input type="number" id="cf-bet" class="w-full bg-black border border-gray-700 p-4 rounded-xl text-white font-black text-xl text-center mb-5 shadow-inner" value="100">
+                        <div class="flex gap-4">
+                            <button onclick="Casino.playCoinflip('heads')" class="flex-1 bg-red-600 hover:bg-red-500 py-4 rounded-xl font-black text-lg shadow-md active:scale-95">HEADS</button>
+                            <button onclick="Casino.playCoinflip('tails')" class="flex-1 bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-black text-lg shadow-md active:scale-95">TAILS</button>
+                        </div>
+                    </div>`;
+            } else {
+                c.innerHTML = `<div class="glass-card p-8 text-center text-gray-400 border border-gray-700"><p class="text-5xl mb-4">🚧</p><p class="font-bold">Masih dalam perbaikan!</p></div>`;
+            }
         },
-        backToMenu: () => {
-            ['slots', 'blackjack', 'coinflip'].forEach(g => document.getElementById(`casino-${g}`).classList.add('hidden'));
+        close: () => {
+            document.getElementById('casino-game-view').classList.add('hidden');
             document.getElementById('casino-menu').classList.remove('hidden');
         },
-
-        // Slots Logic
-        playSlots: () => {
-            const betInput = document.getElementById('slots-bet-input');
-            const bet = parseInt(betInput.value);
-            const currency = document.getElementById('slots-currency').value;
-
-            if (isNaN(bet) || bet <= 0) return Utils.toast("Jumlah taruhan salah!");
-            if (currency === 'coins' && game.player.coins < bet) return Utils.toast("Koin tidak cukup!");
-            if (currency === 'diamonds' && game.player.diamonds < bet) return Utils.toast("Diamond tidak cukup!");
-
-            if (currency === 'coins') Utils.addCoins(-bet);
-            else Utils.addDiamonds(-bet);
-
-            const btn = document.getElementById('btn-spin-slots');
-            btn.disabled = true;
-
-            const symbols = ['🍒', '💎', '🔔', '🍋', '⭐', '7️⃣'];
-            const slotEls = [document.getElementById('slot-1'), document.getElementById('slot-2'), document.getElementById('slot-3')];
-
-            slotEls.forEach(s => s.parentElement.classList.add('animate-hit'));
-
-            setTimeout(() => {
-                slotEls.forEach(s => s.parentElement.classList.remove('animate-hit'));
-                const res = [
-                    symbols[Math.floor(Math.random() * symbols.length)],
-                    symbols[Math.floor(Math.random() * symbols.length)],
-                    symbols[Math.floor(Math.random() * symbols.length)]
-                ];
-
-                slotEls.forEach((s, i) => s.innerText = res[i]);
-
-                const unique = new Set(res).size;
-                if (unique === 1) { // 3 Match Jackpot
-                    const win = bet * 10;
-                    if (currency === 'coins') Utils.addCoins(win); else Utils.addDiamonds(win);
-                    Utils.toast(`🎉 JACKPOT! Menang ${win} ${currency === 'coins' ? '🪙' : '💎'}!`);
-                } else if (unique === 2) { // 2 Match
-                    const win = bet * 2;
-                    if (currency === 'coins') Utils.addCoins(win); else Utils.addDiamonds(win);
-                    Utils.toast(`Dapat 2 Sama! Menang ${win} ${currency === 'coins' ? '🪙' : '💎'}`);
-                } else {
-                    Utils.toast("Belum beruntung, coba lagi!");
-                }
-                btn.disabled = false;
-            }, 800);
-        },
-
-        // Coinflip Logic
-        playCoinflip: (choice) => {
-            const bet = parseInt(document.getElementById('coinflip-bet-input').value);
-            if (isNaN(bet) || bet <= 0 || game.player.coins < bet) return Utils.toast("Koin tidak cukup!");
-
+        playSlot: () => {
+            const bet = parseInt(document.getElementById('sl-bet').value);
+            if(isNaN(bet) || bet < 10 || game.player.coins < bet) return Utils.toast("Koin tidak valid/kurang! Min 10🪙");
             Utils.addCoins(-bet);
-            const visual = document.getElementById('coin-visual');
-            visual.classList.add('animate-hit');
-
-            setTimeout(() => {
-                visual.classList.remove('animate-hit');
-                const winSide = Math.random() < 0.5 ? 'heads' : 'tails';
-                visual.innerText = winSide === 'heads' ? 'H' : 'T';
-
-                if (winSide === choice) {
-                    const win = bet * 2;
-                    Utils.addCoins(win);
-                    Utils.toast(`Tebakan Benar! Menang ${win}🪙`);
-                } else {
-                    Utils.toast("Tebakan Salah!");
+            
+            const btn = document.getElementById('sl-btn'); btn.disabled = true;
+            const sym = ['🍒','🍋','🔔','⭐','💎','7️⃣'];
+            const e1 = document.getElementById('sl-1'), e2 = document.getElementById('sl-2'), e3 = document.getElementById('sl-3');
+            
+            let spins = 0;
+            const t = setInterval(() => {
+                e1.innerText = sym[Math.floor(Math.random()*sym.length)];
+                e2.innerText = sym[Math.floor(Math.random()*sym.length)];
+                e3.innerText = sym[Math.floor(Math.random()*sym.length)];
+                spins++;
+                if(spins > 30) { // Animasi putar lebih lama
+                    clearInterval(t); btn.disabled = false;
+                    const r1 = e1.innerText, r2 = e2.innerText, r3 = e3.innerText;
+                    if(r1===r2 && r2===r3) {
+                        let win = bet * 15; Utils.addCoins(win); Utils.toast(`🎰 JACKPOT BESAR! +${win}🪙`);
+                    } else if(r1===r2 || r2===r3 || r1===r3) {
+                        let win = bet * 2; Utils.addCoins(win); Utils.toast(`Lumayan! +${win}🪙`);
+                    } else { Utils.toast("Rugi bandar! Coba lagi."); }
                 }
-            }, 600);
-        }
-    };
-
-    // --- BLACKJACK SYSTEM ---
-    const Blackjack = {
-        deck: [],
-        playerHand: [],
-        dealerHand: [],
-        bet: 0,
-        suits: ['♠', '♥', '♦', '♣'],
-        values: ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'],
-
-        buildDeck: () => {
-            Blackjack.deck = [];
-            for (let s of Blackjack.suits) {
-                for (let v of Blackjack.values) {
-                    let w = parseInt(v);
-                    if (v === 'J' || v === 'Q' || v === 'K') w = 10;
-                    if (v === 'A') w = 11;
-                    Blackjack.deck.push({ suit: s, value: v, weight: w });
+            }, 40); // Kecepatan tinggi
+        },
+        playDice: (guess) => {
+            const bet = parseInt(document.getElementById('d-bet').value);
+            if(isNaN(bet) || bet < 10 || game.player.coins < bet) return Utils.toast("Koin tidak valid/kurang! Min 10🪙");
+            Utils.addCoins(-bet);
+            
+            const d1 = document.getElementById('d-1'), d2 = document.getElementById('d-2'), res = document.getElementById('d-res');
+            let spins = 0;
+            const t = setInterval(() => {
+                d1.innerText = Math.floor(Math.random()*6)+1;
+                d2.innerText = Math.floor(Math.random()*6)+1;
+                res.innerText = "?";
+                spins++;
+                if(spins > 20) {
+                    clearInterval(t);
+                    const v1 = Math.floor(Math.random()*6)+1; const v2 = Math.floor(Math.random()*6)+1;
+                    d1.innerText = v1; d2.innerText = v2;
+                    const total = v1+v2; res.innerText = total;
+                    
+                    let win = 0;
+                    if(guess === 'low' && total < 7) win = bet * 2;
+                    if(guess === 'high' && total > 7) win = bet * 2;
+                    if(guess === 'mid' && total === 7) win = bet * 4;
+                    
+                    if(win > 0) { Utils.addCoins(win); Utils.toast(`🎲 TEBAKAN TEPAT! +${win}🪙`); }
+                    else { Utils.toast("Salah tebak! Uang hangus."); }
                 }
-            }
-            for (let i = Blackjack.deck.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [Blackjack.deck[i], Blackjack.deck[j]] = [Blackjack.deck[j], Blackjack.deck[i]];
-            }
+            }, 50);
         },
-        draw: () => Blackjack.deck.pop(),
-        calcScore: (hand) => {
-            let score = 0, aces = 0;
-            for (let c of hand) {
-                score += c.weight;
-                if (c.value === 'A') aces++;
-            }
-            while (score > 21 && aces > 0) {
-                score -= 10; aces--;
-            }
-            return score;
-        },
-        renderCard: (card, hidden = false) => {
-            if (hidden) return `<div class="bg-purple-900 border border-purple-700 w-10 h-14 rounded flex items-center justify-center text-white">?</div>`;
-            const color = (card.suit === '♥' || card.suit === '♦') ? 'text-red-500' : 'text-gray-900';
-            return `<div class="bg-white border border-gray-300 w-10 h-14 rounded flex flex-col items-center justify-center ${color} font-bold shadow text-xs">
-                        <div>${card.value}</div>
-                        <div>${card.suit}</div>
-                    </div>`;
-        },
-        updateBoard: (hideDealer = true) => {
-            document.getElementById('bj-player-score').innerText = Blackjack.calcScore(Blackjack.playerHand);
-            document.getElementById('bj-player-cards').innerHTML = Blackjack.playerHand.map(c => Blackjack.renderCard(c)).join('');
-
-            if (hideDealer) {
-                document.getElementById('bj-dealer-score').innerText = "?";
-                let html = Blackjack.renderCard(Blackjack.dealerHand[0]) + Blackjack.renderCard(null, true);
-                document.getElementById('bj-dealer-cards').innerHTML = html;
-            } else {
-                document.getElementById('bj-dealer-score').innerText = Blackjack.calcScore(Blackjack.dealerHand);
-                document.getElementById('bj-dealer-cards').innerHTML = Blackjack.dealerHand.map(c => Blackjack.renderCard(c)).join('');
-            }
-        },
-        start: () => {
-            const bet = parseInt(document.getElementById('bj-bet-input').value);
-            if (isNaN(bet) || bet <= 0 || game.player.coins < bet) return Utils.toast("Koin tidak cukup!");
-
-            Blackjack.bet = bet;
+        playCoinflip: (guess) => {
+            const bet = parseInt(document.getElementById('cf-bet').value);
+            if(isNaN(bet) || bet < 10 || game.player.coins < bet) return Utils.toast("Koin tidak valid/kurang! Min 10🪙");
             Utils.addCoins(-bet);
 
-            document.getElementById('bj-bet-screen').classList.add('hidden');
-            document.getElementById('bj-play-screen').classList.remove('hidden');
-            document.getElementById('bj-actions').classList.remove('hidden');
-            document.getElementById('bj-result').classList.add('hidden');
-            document.getElementById('bj-play-again').classList.add('hidden');
-
-            Blackjack.buildDeck();
-            Blackjack.playerHand = [Blackjack.draw(), Blackjack.draw()];
-            Blackjack.dealerHand = [Blackjack.draw(), Blackjack.draw()];
-
-            Blackjack.updateBoard(true);
-
-            if (Blackjack.calcScore(Blackjack.playerHand) === 21) {
-                Blackjack.endGame(true, "Blackjack 21! Kamu Menang!");
-            }
-        },
-        hit: () => {
-            Blackjack.playerHand.push(Blackjack.draw());
-            Blackjack.updateBoard(true);
-            if (Blackjack.calcScore(Blackjack.playerHand) > 21) {
-                Blackjack.endGame(false, "Bust! Nilai Kartu Melebihi 21.");
-            }
-        },
-        doubleDown: () => {
-            if (game.player.coins < Blackjack.bet) return Utils.toast("Koin tidak cukup untuk Double!");
-            Utils.addCoins(-Blackjack.bet);
-            Blackjack.bet *= 2;
-            Blackjack.playerHand.push(Blackjack.draw());
-            Blackjack.updateBoard(true);
-            if (Blackjack.calcScore(Blackjack.playerHand) > 21) {
-                Blackjack.endGame(false, "Bust! Nilai Kartu Melebihi 21.");
-            } else {
-                Blackjack.stand();
-            }
-        },
-        stand: () => {
-            document.getElementById('bj-actions').classList.add('hidden');
-            Blackjack.updateBoard(false);
-
-            const dealerPlay = () => {
-                if (Blackjack.calcScore(Blackjack.dealerHand) < 17) {
-                    Blackjack.dealerHand.push(Blackjack.draw());
-                    Blackjack.updateBoard(false);
-                    setTimeout(dealerPlay, 600);
+            const coin = document.getElementById('cf-coin');
+            coin.innerText = "";
+            coin.style.transform = "scaleY(0.1) rotate(720deg)";
+            
+            setTimeout(() => {
+                coin.style.transform = "scaleY(1) rotate(0deg)";
+                const result = Math.random() < 0.5 ? 'heads' : 'tails';
+                coin.innerText = result === 'heads' ? 'H' : 'T';
+                
+                if(guess === result) {
+                    let win = bet * 2; Utils.addCoins(win); Utils.toast(`🪙 MENANG! +${win}🪙`);
                 } else {
-                    Blackjack.resolve();
+                    Utils.toast("Kalah Coinflip!");
                 }
-            };
-            setTimeout(dealerPlay, 600);
-        },
-        resolve: () => {
-            const p = Blackjack.calcScore(Blackjack.playerHand);
-            const d = Blackjack.calcScore(Blackjack.dealerHand);
-
-            if (d > 21) Blackjack.endGame(true, "Dealer Bust! Kamu Menang!");
-            else if (p > d) Blackjack.endGame(true, "Kamu Menang!");
-            else if (p < d) Blackjack.endGame(false, "Dealer Menang!");
-            else Blackjack.endGame('tie', "Hasil Seri (Push)!");
-        },
-        endGame: (status, msg) => {
-            document.getElementById('bj-actions').classList.add('hidden');
-            Blackjack.updateBoard(false);
-
-            const res = document.getElementById('bj-result');
-            res.classList.remove('hidden');
-            res.innerText = msg;
-
-            if (status === true) {
-                Utils.addCoins(Blackjack.bet * 2);
-                res.className = "text-center text-sm font-bold py-2 text-green-400 animate-pop";
-            } else if (status === 'tie') {
-                Utils.addCoins(Blackjack.bet);
-                res.className = "text-center text-sm font-bold py-2 text-yellow-400 animate-pop";
-            } else {
-                res.className = "text-center text-sm font-bold py-2 text-red-500 animate-pop";
-            }
-            document.getElementById('bj-play-again').classList.remove('hidden');
-        },
-        resetScreen: () => {
-            document.getElementById('bj-play-screen').classList.add('hidden');
-            document.getElementById('bj-bet-screen').classList.remove('hidden');
+            }, 500);
         }
     };
 
-    // --- SETTINGS & SAVE EXPORT/IMPORT ---
-    const Settings = {
-        exportSaveTxt: () => {
-            const dataStr = JSON.stringify(game, null, 2);
-            const blob = new Blob([dataStr], { type: "text/plain;charset=utf-8" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `realm_save_${game.player.name.toLowerCase()}_lvl${game.player.level}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            Utils.toast("File Save .txt berhasil di-download!");
-        },
-        handleFileUpload: (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                document.getElementById('import-text-area').value = e.target.result;
-            };
-            reader.readAsText(file);
-        },
-        importSaveText: () => {
-            const text = document.getElementById('import-text-area').value.trim();
-            if (!text) return Utils.toast("Masukkan kode save terlebih dahulu!");
-
-            try {
-                const parsed = JSON.parse(text);
-                if (parsed.player && parsed.farm) {
-                    game = { ...INITIAL_STATE, ...parsed };
-                    Utils.saveGame();
-                    UI.init();
-                    Utils.toast("Progress game berhasil di-restore!");
-                    document.getElementById('import-text-area').value = '';
-                } else {
-                    throw new Error("Invalid structure");
-                }
-            } catch (e) {
-                Utils.toast("Format data save tidak valid!");
-            }
-        },
-        resetGamePrompt: () => {
-            const container = document.getElementById('modal-container');
-            container.innerHTML = `
-                <div class="glass-card p-5 w-full max-w-xs animate-pop text-center">
-                    <h3 class="font-bold text-sm text-red-400 mb-2">⚠️ Hapus Semua Progress?</h3>
-                    <p class="text-xs text-gray-400 mb-4">Aksi ini tidak bisa dibatalkan!</p>
-                    <div class="flex gap-2">
-                        <button onclick="Profile.closeModal()" class="flex-1 bg-gray-800 text-gray-300 py-2 rounded text-xs font-bold">Batal</button>
-                        <button onclick="Settings.executeReset()" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 rounded text-xs font-bold">Ya, Hapus</button>
-                    </div>
-                </div>
-            `;
-            container.classList.remove('hidden');
-        },
-        executeReset: () => {
-            localStorage.removeItem(SAVE_KEY);
-            location.reload();
-        }
-    };
-
-    // Boot Up
+    // Boot
     window.onload = UI.init;
-
 </script>
 </body>
 </html>
